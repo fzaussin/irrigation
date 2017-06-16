@@ -6,7 +6,7 @@ console script. To run this script uncomment the following line in the
 entry_points section in setup.cfg:
 
     console_scripts =
-     fibonacci = temporal_slopes.skeleton:run
+     fibonacci = irrigation-OLD.skeleton:run
 
 Then run `python setup.py install` which will install the command `fibonacci`
 inside your current environment.
@@ -21,7 +21,6 @@ import argparse
 import sys
 import logging
 
-from temporal_slopes import __version__
 
 __author__ = "Felix Zaussinger"
 __copyright__ = "Felix Zaussinger"
@@ -60,7 +59,7 @@ def parse_args(args):
     parser.add_argument(
         '--version',
         action='version',
-        version='temporal-slopes {ver}'.format(ver=__version__))
+        version='irrigation-OLD {ver}'.format(ver=__version__))
     parser.add_argument(
         dest="n",
         help="n-th Fibonacci number",
