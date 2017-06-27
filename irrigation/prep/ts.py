@@ -58,7 +58,7 @@ def prepare(gpi, start_date, end_date, kind="clim"):
     return ts_scaled
 
 
-def plot_ts(gpi, start_date, end_date, kind="clim", plot=False):
+def plot_ts(gpi, start_date, end_date, kind="clim", plot=True):
     """
     Prepare eraland, amsre, ascat, amsr2 time series for processing. First apply gapfilling,
     then calculate climatology or moving average as specified by kind and lastly
@@ -149,12 +149,7 @@ if __name__ == "__main__":
     # 721798 is mississippi example gpi
 
 
-    ts = prepare(gpi=721798,
+    plot_ts(gpi=732424,
             start_date='2007-01-01',
             end_date='2013-12-31',
             kind='movav')
-    print ts
-    ts.plot()
-    plt.show()
-
-
