@@ -197,7 +197,6 @@ def map_maker(csv_data, map_title=None, path_results=None, fname=None):
 def lcmask_map(csv_data, map_title=None, path_results=None, fname=None):
     """
     Wrapper around spatial_plot_quarter_grid for Irrigation_Analysis plots
-
     :param csv_data:
     :param map_title:
     :param path_results:
@@ -220,7 +219,7 @@ def lcmask_map(csv_data, map_title=None, path_results=None, fname=None):
 
 if __name__ == '__main__':
     import pandas as pd
-    path = '/home/fzaussin/Desktop/TEST_USA_amsre_monthly_psds.csv'
+    path = '/home/fzaussin/Desktop/TEST_USA_scaled2ascat_ascat.csv'
     data = pd.DataFrame.from_csv(path)
     #data.rename(columns={'gpi': 'gpi_quarter'}, inplace=True)
     data['gpi_quarter'] = data.index.values
@@ -228,5 +227,5 @@ if __name__ == '__main__':
                               title='tag',
                               cbrange=[0,30],
                               cblabel=r'$days^{-1}$',
-                              path='/home/fzaussin/Desktop/monthly-results',
-                              fname='amsre_monthly_psds')
+                              path='/home/fzaussin/Desktop/scaled2ascat',
+                              fname='ascat_monthly_psds')
