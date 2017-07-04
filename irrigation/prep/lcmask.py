@@ -62,6 +62,14 @@ def mask_gpis(irrig_fpath, treshhold=0.05):
     masked_data = merged_data.loc[(merged_data['crop_mask'] >= treshhold) & (merged_data['crop_mask'] <= 1.0)]
     return masked_data
 
+def merge_lcmask_params(param1, param2):
+    """"""
+    gpis1 = load_lcmask(param1)
+    gpis2 = load_lcmask(param2)
+    # merge data frames: colname = gpi_quarter
+    merged_data = pd.merge(gpis1, gpis2, how='left', on='gpi_quarter')
+    return merged_data
+
 def lcmask_tresh(treshhold=0.05):
     """"""
     # TODO: temporal only for plot
@@ -73,10 +81,18 @@ def lcmask_tresh(treshhold=0.05):
 if __name__ == '__main__':
     from irrigation.vis import spatialplot
 
-    ptlist = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed+irrigated_thresh5_global.csv'
-    data = pd.DataFrame.from_csv(ptlist)
 
-    spatialplot.spatial_plot_quarter_grid(data)
+    path = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/QDEG_pointlist_USA.csv'
+    masked_gpis = mask_gpis(path)
+    print masked_gpis
+    masked_gpis.to_csv('/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed_cropland_usa.csv')
+
+    """
+    df = merge_lcmask_params('fLC.10', 'fLC.20')
+    treshhold = 0.05
+    masked_data = df.loc[(df['crop_mask_x'] > treshhold) | (df['crop_mask_y'] > treshhold)]
+    print masked_data
+    """
 
 
     """

@@ -33,12 +33,11 @@ def prepare(gpi, start_date, end_date, kind="clim"):
     # read data
     data_object = importdata.QDEGdata()
     # TODO: resolve problems concerning data overlap periods, specifically amsr2
-    ts_input = data_object.read_gpi(gpi, start_date, end_date, 'eraland', 'amsre', 'ascat') #, 'amsr2')
+    #TODO: temp scaling to ascat for comp
+    ts_input = data_object.read_gpi(gpi, start_date, end_date, 'gldas', 'ascat', 'amsre') #, 'amsr2')
 
     # gapfill
     ts_gapfill = interp.iter_fill(ts_input, 7)
-    # drop rows with more than 1 nan value
-    ts_gapfill = ts_gapfill.dropna(thresh=3)
 
     # smooth
     if kind == 'clim':
@@ -52,9 +51,10 @@ def prepare(gpi, start_date, end_date, kind="clim"):
         raise Exception(
             "Wrong input, specify 'clim' or 'movav'.")
 
+    # drop rows with missing values
+    ts_smooth = ts_smooth.dropna()
     # scale sats to model
     ts_scaled = scaling.scale(ts_smooth, 'mean_std', 0)
-
     return ts_scaled
 
 
@@ -132,7 +132,7 @@ def plot_ts(gpi, start_date, end_date, kind="clim", plot=True):
         plt.tight_layout()
         """
         # scaled
-        ax = ts_scaled.plot(title=plot_title+" (Scaled)", ylim=[0, 100])
+        ax = ts_scaled.plot(title=plot_title+" (Scaled)")
         sns.despine()
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -148,8 +148,10 @@ if __name__ == "__main__":
     # test func
     # 721798 is mississippi example gpi
 
-
-    plot_ts(gpi=732424,
+    ts = prepare(gpi=721798,
             start_date='2007-01-01',
-            end_date='2013-12-31',
+            end_date='2011-12-31',
             kind='movav')
+    print ts
+    ts.plot()
+    plt.show()
