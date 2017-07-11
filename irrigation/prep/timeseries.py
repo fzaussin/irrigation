@@ -7,10 +7,10 @@ from irrigation.prep import interp, smooth
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-sns.set(style="ticks", context='poster', palette=sns.diverging_palette(220, 20, s=90, l=30))
+sns.set(style="ticks", context='poster') #, palette=sns.diverging_palette(220, 20, s=90, l=30))
 
 
-def prepare(gpi, start_date, end_date, kind="clim"):
+def prepare(gpi, start_date, end_date, model, satellites, kind="clim"):
     """
     Prepare eraland, amsre, ascat, amsr2 time series for processing. First apply gapfilling,
     then calculate climatology or moving average as specified by kind and lastly
@@ -33,8 +33,7 @@ def prepare(gpi, start_date, end_date, kind="clim"):
     # read data
     data_object = importdata.QDEGdata()
     # TODO: resolve problems concerning data overlap periods, specifically amsr2
-    #TODO: temp scaling to ascat for comp
-    ts_input = data_object.read_gpi(gpi, start_date, end_date, 'gldas', 'ascat', 'amsre') #, 'amsr2')
+    ts_input = data_object.read_gpi(gpi, start_date, end_date, model, satellites)
 
     # gapfill
     ts_gapfill = interp.iter_fill(ts_input, 7)
@@ -80,7 +79,7 @@ def plot_ts(gpi, start_date, end_date, kind="clim", plot=True):
     """
     # read data
     data_object = importdata.QDEGdata()
-    ts_input = data_object.read_gpi(gpi, start_date, end_date, 'eraland', 'ascat', 'amsre')
+    ts_input = data_object.read_gpi_old(gpi, start_date, end_date, 'eraland', 'ascat', 'amsre')
 
     # gapfill
     ts_gapfill = interp.iter_fill(ts_input, 7)
@@ -148,9 +147,11 @@ if __name__ == "__main__":
     # test func
     # 721798 is mississippi example gpi
 
-    ts = prepare(gpi=721798,
-            start_date='2007-01-01',
-            end_date='2011-12-31',
+    ts = prepare(gpi=753448,
+            start_date='2013-01-01',
+            end_date='2013-12-31',
+            model='eraland',
+            satellites=['ascat','ascat_vegcorr', 'amsr2'],
             kind='movav')
     print ts
     ts.plot()
