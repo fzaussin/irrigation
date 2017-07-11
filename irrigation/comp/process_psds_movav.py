@@ -16,7 +16,7 @@ import pandas as pd
 out_root = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results'
 
 # information on processing run and location info
-info = 'test'
+info = 'diffquotslope'
 region = 'usa'
 
 # define 1 (!) model and multiple satellite datasets
@@ -57,7 +57,8 @@ for row in gpis_lcmask.itertuples():
                                 model=model,
                                 satellites=satellites,
                                 kind='movav')
-
+        if df.empty:
+            raise IOError
     except (IOError, RuntimeError, ValueError):
         # ValueError: Index of time series for location id #1482116 not found
         # skip gpi if no index for a location id can be found
@@ -67,11 +68,17 @@ for row in gpis_lcmask.itertuples():
             value[str(gpi)] = np.nan
         continue
     try:
-        # calculate slopes
-        df_slopes = slopes.slopes_movav(df)
+        # calculate slopes:
+        # slopes_movav is with convolution
+        #df_slopes = slopes.slopes_movav(df)
+        # local_slopes is differential quotient
+        df_slopes = slopes.local_slope(df)
+        print "dfslopes", df_slopes
         df_psd = slopes.psd(df_slopes)
+        print "psd", df_psd
         # aggregate psd for seasons
         psd_sum = slopes.aggregate_psds(df_psd, resampling)
+        print "psds", psd_sum
         # append to sat df
         # normalize to area fraction
         for key, value in dict_of_dfs.iteritems():
@@ -102,7 +109,7 @@ print "Elapsed time: ", str(datetime.timedelta(seconds=toc - tic))
 
 
 # create basic log file with process information
-logging.basicConfig(filename=os.path.join(out_root,'test.log'),level=logging.DEBUG)
+logging.basicConfig(filename=os.path.join(out_root,'test_diffquotslope.log'),level=logging.DEBUG)
 logging.info('Model data: {}'.format(model))
 logging.info('Satellite data: {}'.format(satellites))
 logging.info('Date range: {} to {}'.format(start, end))
