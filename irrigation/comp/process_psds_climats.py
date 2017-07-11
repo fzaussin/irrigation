@@ -8,6 +8,11 @@ import matplotlib.pyplot as plt
 from irrigation.prep import timeseries
 from irrigation.comp import slopes
 
+
+# define 1 model and multiple satellite datasets
+model = 'eraland'
+satellites = ['ascat', 'amsre']
+
 # path to gpis
 path = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed_cropland_usa.csv'
 gpis_lcmask = pd.DataFrame.from_csv(path)
@@ -24,6 +29,8 @@ for gpi in gpis:
         df = timeseries.prepare(gpi=gpi,
                                 start_date='2007-01-01',
                                 end_date='2011-12-31',
+                                model=model,
+                                satellites=satellites,
                                 kind='movav')
     except IOError:
         # skip gpi if no index for a location id can be found

@@ -71,6 +71,8 @@ if __name__=='__main__':
     df = timeseries.prepare(gpi=gpi,
                             start_date='2007-01-01',
                             end_date='2011-12-31',
+                            model='eraland',
+                            satellites=['ascat','amsre'],
                             kind='movav')
     df.plot()
     # aggregate psds

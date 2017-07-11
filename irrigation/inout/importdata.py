@@ -15,12 +15,16 @@ import pygeogrids.netcdf as ncgrids
 from pygeogrids.grids import genreg_grid
 qdeg_grid = genreg_grid(grd_spc_lat=0.25, grd_spc_lon=0.25).to_cell_grid()
 
-# generate waro grid
-warp_path = '/home/fzaussin/shares/radar/Datapool_processed/WARP/datasets/reckless_rom/R1AB/080_ssm/netcdf'
+# TODO: find better solution for ascat reader
+# generate warp grid
 warp_grid_path = '/home/fzaussin/shares/radar/Datapool_processed/WARP/ancillary/warp5_grid/TUW_WARP5_grid_info_2_1.nc'
 warp_grid = ncgrids.load_grid(warp_grid_path)
-io_ascat = GriddedNcContiguousRaggedTs(path=warp_path, grid=warp_grid)
-
+# version reckless rom
+warp_path_reckless_rom = '/home/fzaussin/shares/radar/Datapool_processed/WARP/datasets/reckless_rom/R1AB/080_ssm/netcdf'
+io_ascat_reckless_rom = GriddedNcContiguousRaggedTs(path=warp_path_reckless_rom, grid=warp_grid)
+# version ultimate uhnari -> dynamic slope recommended by sebhahn
+warp_path_ultimate_uhnari = '/home/fzaussin/shares/radar/Datapool_processed/WARP/datasets/ultimate_uhnari/R1A/080_ssm/netcdf/'
+io_ascat_ultimate_uhnari = GriddedNcContiguousRaggedTs(path=warp_path_ultimate_uhnari, grid=warp_grid)
 
 def qdeg2lonlat(gpi_quarter):
     """"""
@@ -35,10 +39,16 @@ def era_land_ts(gpi):
     gpi_era = era.get_nearest_gp_info(lon, lat)[0]
     return era.read_ts(gpi_era)
 
-def ascat_vegcorr(gpi):
+def ascat_reckless_rom(gpi):
     """Read ascat data with new vegetation correction"""
     lon, lat = qdeg2lonlat(gpi)
-    ascat_ts = io_ascat.read(lon, lat)
+    ascat_ts = io_ascat_reckless_rom.read(lon, lat)
+    return ascat_ts
+
+def ascat_ultimate_uhnari(gpi):
+    """Read ascat data with new vegetation correction"""
+    lon, lat = qdeg2lonlat(gpi)
+    ascat_ts = io_ascat_ultimate_uhnari.read(lon, lat)
     return ascat_ts
 
 
@@ -121,22 +131,37 @@ class QDEGdata(object):
             ts_ascat.index=ts_ascat.index.date
             data_group['ascat'] = ts_ascat
 
-        if 'ascat_vegcorr' in satellites:
-            ts_ascat_vegcorr = ascat_vegcorr(gpi)
-            if ts_ascat_vegcorr is None:
+        if 'ascat_reckless_rom' in satellites:
+            ts_ascat_reckless_rom = ascat_reckless_rom(gpi)
+            if ts_ascat_reckless_rom is None:
                 print 'No veg_corr ascat data for gpi %0i' % gpi
-                ts_ascat_vegcorr = pd.Series(
+                ts_ascat_reckless_rom = pd.Series(
                     index=pd.date_range(start=start_date, end=end_date))
             else:
-                ts_ascat_vegcorr = ts_ascat_vegcorr[(ts_ascat_vegcorr['proc_flag'] <= 2) & (ts_ascat_vegcorr['ssf'] == 1)][
+                ts_ascat_reckless_rom = ts_ascat_reckless_rom[(ts_ascat_reckless_rom['proc_flag'] <= 2) & (ts_ascat_reckless_rom['ssf'] == 1)][
                     'sm']
                 # drop hours, mins, secs
-                ts_ascat_vegcorr.index = ts_ascat_vegcorr.index.normalize()
+                ts_ascat_reckless_rom.index = ts_ascat_reckless_rom.index.normalize()
             # append to data group
-            #ts_ascat_vegcorr.index = ts_ascat_vegcorr.index.date
-            print ts_ascat_vegcorr
-            ts_ascat_vegcorr = ts_ascat_vegcorr.resample('D').mean()
-            data_group['ascat_vegcorr'] = ts_ascat_vegcorr
+            #ts_ascat_reckless_rom.index = ts_ascat_reckless_rom.index.date
+            ts_ascat_reckless_rom = ts_ascat_reckless_rom.resample('D').mean()
+            data_group['ascat_reckless_rom'] = ts_ascat_reckless_rom
+
+        if 'ascat_ultimate_uhnari' in satellites:
+            ts_ascat_ultimate_uhnari = ascat_ultimate_uhnari(gpi)
+            if ts_ascat_ultimate_uhnari is None:
+                print 'No veg_corr ascat data for gpi %0i' % gpi
+                ts_ascat_reckless_rom = pd.Series(
+                    index=pd.date_range(start=start_date, end=end_date))
+            else:
+                ts_ascat_ultimate_uhnari = ts_ascat_ultimate_uhnari[(ts_ascat_ultimate_uhnari['proc_flag'] <= 2) & (ts_ascat_ultimate_uhnari['ssf'] == 1)][
+                    'sm']
+                # drop hours, mins, secs
+                ts_ascat_ultimate_uhnari.index = ts_ascat_ultimate_uhnari.index.normalize()
+            # append to data group
+            #ts_ascat_reckless_rom.index = ts_ascat_reckless_rom.index.date
+                ts_ascat_ultimate_uhnari = ts_ascat_ultimate_uhnari.resample('D').mean()
+            data_group['ascat_ultimate_uhnari'] = ts_ascat_ultimate_uhnari
 
         if 'amsr2' in satellites:
             # read amsr2 data
@@ -159,6 +184,9 @@ if __name__ == "__main__":
     data = QDEGdata()
     ts_test = data.read_gpi(750602, '2007-01-01', '2015-12-31',
                                  model='eraland',
-                                 satellites=['ascat', 'ascat_vegcorr', 'amsr2'])
+                                 satellites=['ascat',
+                                             'ascat_reckless_rom',
+                                             'ascat_ultimate_uhnari',
+                                             'amsr2'])
     ts_test.plot(title='test')
     plt.show()

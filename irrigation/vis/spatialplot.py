@@ -219,13 +219,14 @@ def lcmask_map(csv_data, map_title=None, path_results=None, fname=None):
 
 if __name__ == '__main__':
     import pandas as pd
-    path = '/home/fzaussin/Desktop/TEST_USA_scaled2ascat_ascat.csv'
+    path = '/home/fzaussin/Desktop/USA_normalized_area_test_v2/USA_normalized_area_test_amsre.csv'
     data = pd.DataFrame.from_csv(path)
     #data.rename(columns={'gpi': 'gpi_quarter'}, inplace=True)
     data['gpi_quarter'] = data.index.values
     spatial_plot_quarter_grid(data,
                               title='tag',
-                              cbrange=[0,30],
+                              region='USA',
+                              cbrange=(0,30),
                               cblabel=r'$days^{-1}$',
-                              path='/home/fzaussin/Desktop/scaled2ascat',
-                              fname='ascat_monthly_psds')
+                              path='/home/fzaussin/Desktop/USA_normalized_area_test_v2',
+                              fname='amsre_normalized_area_test')

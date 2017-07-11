@@ -1,5 +1,5 @@
 from irrigation.inout import importdata
-from irrigation.prep import interp, smooth
+from irrigation.prep import interp
 
 import matplotlib.pyplot as plt
 from pytesmo import scaling
@@ -12,7 +12,7 @@ def prepare_ts(gpi, start_date, end_date):
     """"""
     # read ts
     data_object = importdata.QDEGdata()
-    ts = data_object.read_gpi(gpi, start_date, end_date, 'gldas', 'ascat', 'amsre')
+    ts = data_object.read_gpi_old(gpi, start_date, end_date, 'eraland', 'ascat', 'amsre')
     # gapfill
     ts_gapfill = interp.iter_fill(ts, 5)
     ts_gapfill = ts_gapfill.dropna()
@@ -66,14 +66,58 @@ def iterate_gpis(gpi_list):
 
 
 if __name__=='__main__':
+    # process for us
+    import time
+    import datetime
 
-    gpi = 726120
+    # set date range
+    start_date = '2007-01-01'
+    end_date = '2011-12-31'
+
+    # init output containers
+    df_ascat = pd.DataFrame()
+    df_amsre = pd.DataFrame()
+
+    # path to gpis
+    path = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed_cropland_usa.csv'
+    gpis_lcmask = pd.DataFrame.from_csv(path)
+    gpis = gpis_lcmask['gpi_quarter']
+    gpis = gpis.sort_values()
+
+    tic = time.clock()
+    for gpi in gpis:
+        try:
+            df_irrig = irrig_increments(gpi, start_date, end_date,
+                                        resampling='Q-NOV')
+            print df_irrig
+            df_ascat[str(gpi)] = df_irrig['ascat']
+            df_amsre[str(gpi)] = df_irrig['amsre']
+
+        except (ValueError, IOError, RuntimeError):
+            df_ascat[str(gpi)] = np.nan
+            df_amsre[str(gpi)] = np.nan
+
+    # transpose
+    df_ascat_out = df_ascat.transpose()
+    df_amsre_out = df_amsre.transpose()
+    # save to csv
+    df_ascat_out.to_csv(
+        '/home/fzaussin/Desktop/US-pos-increments-ascat.csv')
+    df_amsre_out.to_csv(
+        '/home/fzaussin/Desktop/US-pos-increments-amsre.csv')
+
+    toc = time.clock()
+    print "Elapsed time: ", str(datetime.timedelta(seconds=toc - tic))
+
+    """ SIMPLE PLOT
+    gpi = 743746
     start_date = '2007-01-01'
     end_date = '2013-12-31'
 
     df = prepare_ts(gpi, start_date, end_date)
-    df.plot()
+    df.plot(title='input ts')
 
-    #df_irrig = irrig_increments(gpi,start_date, end_date, resampling='Q-NOV')
-    #df_irrig.plot()
+    df_irrig = irrig_increments(gpi,start_date, end_date, resampling='Q-NOV')
+    df_irrig.plot(kind='bar', title='positive sm increments')
     plt.show()
+    """

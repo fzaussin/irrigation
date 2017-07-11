@@ -147,11 +147,11 @@ if __name__ == "__main__":
     # test func
     # 721798 is mississippi example gpi
 
-    ts = prepare(gpi=753448,
+    ts = prepare(gpi=727439,
             start_date='2013-01-01',
             end_date='2013-12-31',
             model='eraland',
-            satellites=['ascat','ascat_vegcorr', 'amsr2'],
+            satellites=['ascat','ascat_reckless_rom', 'ascat_ultimate_uhnari', 'amsr2'],
             kind='movav')
     print ts
     ts.plot()
