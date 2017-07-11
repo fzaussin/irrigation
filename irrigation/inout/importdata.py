@@ -8,9 +8,18 @@ from smecv.input.common_format import CCIDs
 from rsdata.ECMWF.interface import ERALAND_g2ze
 from rsdata.GLDAS_NOAH.interface import GLDAS025v2Ts
 
+from pynetcf.time_series import GriddedNcContiguousRaggedTs
+import pygeogrids.netcdf as ncgrids
+
 # generate qdeg grid once
 from pygeogrids.grids import genreg_grid
 qdeg_grid = genreg_grid(grd_spc_lat=0.25, grd_spc_lon=0.25).to_cell_grid()
+
+# generate waro grid
+warp_path = '/home/fzaussin/shares/radar/Datapool_processed/WARP/datasets/reckless_rom/R1AB/080_ssm/netcdf'
+warp_grid_path = '/home/fzaussin/shares/radar/Datapool_processed/WARP/ancillary/warp5_grid/TUW_WARP5_grid_info_2_1.nc'
+warp_grid = ncgrids.load_grid(warp_grid_path)
+io_ascat = GriddedNcContiguousRaggedTs(path=warp_path, grid=warp_grid)
 
 
 def qdeg2lonlat(gpi_quarter):
@@ -25,6 +34,12 @@ def era_land_ts(gpi):
     lon, lat = qdeg2lonlat(gpi)
     gpi_era = era.get_nearest_gp_info(lon, lat)[0]
     return era.read_ts(gpi_era)
+
+def ascat_vegcorr(gpi):
+    """Read ascat data with new vegetation correction"""
+    lon, lat = qdeg2lonlat(gpi)
+    ascat_ts = io_ascat.read(lon, lat)
+    return ascat_ts
 
 
 class QDEGdata(object):
@@ -42,7 +57,7 @@ class QDEGdata(object):
         self.ascat = CCIDs(path_ascat)
         self.amsr2 = CCIDs(path_amsr2)
 
-    def read_gpi(self, gpi, start_date, end_date, *products):
+    def read_gpi(self, gpi, start_date, end_date, model, satellites):
         """
         :param gpi: grid point index on quarter degree grid
         :param start_date:
@@ -56,7 +71,7 @@ class QDEGdata(object):
         # initialize data container
         data_group = pd.DataFrame(index=pd.date_range(start=start_date, end=end_date))
 
-        if 'eraland' in products:
+        if model == 'eraland':
             ts_era = era_land_ts(gpi)
             # error handling
             if ts_era is None:
@@ -68,7 +83,7 @@ class QDEGdata(object):
             # scale percentage values from [0,1] to [0,100]
             data_group['eraland'] = ts_era * 100
 
-        if 'gldas' in products:
+        elif model == 'gldas':
             ts_gldas = GLDAS025v2Ts().read_ts(gpi)
             # error handling
             if ts_gldas is None:
@@ -78,8 +93,10 @@ class QDEGdata(object):
                 ts_gldas = ts_gldas[start_date:end_date]
                 # append to data_group
             data_group['gldas'] = ts_gldas
+        else:
+            pass
 
-        if 'amsre' in products:
+        if 'amsre' in satellites:
             # read amsr2 data
             ts_amsre = self.amsre.read(gpi)
             if ts_amsre is None:
@@ -92,7 +109,7 @@ class QDEGdata(object):
             data_group['amsre'] = ts_amsre
 
         # check for keywords 'ascat', 'amsre' and 'amsr2' and append ts to data_group
-        if 'ascat' in products:
+        if 'ascat' in satellites:
             ts_ascat = self.ascat.read(gpi)
             # error handling
             if ts_ascat is None:
@@ -104,7 +121,24 @@ class QDEGdata(object):
             ts_ascat.index=ts_ascat.index.date
             data_group['ascat'] = ts_ascat
 
-        if 'amsr2' in products:
+        if 'ascat_vegcorr' in satellites:
+            ts_ascat_vegcorr = ascat_vegcorr(gpi)
+            if ts_ascat_vegcorr is None:
+                print 'No veg_corr ascat data for gpi %0i' % gpi
+                ts_ascat_vegcorr = pd.Series(
+                    index=pd.date_range(start=start_date, end=end_date))
+            else:
+                ts_ascat_vegcorr = ts_ascat_vegcorr[(ts_ascat_vegcorr['proc_flag'] <= 2) & (ts_ascat_vegcorr['ssf'] == 1)][
+                    'sm']
+                # drop hours, mins, secs
+                ts_ascat_vegcorr.index = ts_ascat_vegcorr.index.normalize()
+            # append to data group
+            #ts_ascat_vegcorr.index = ts_ascat_vegcorr.index.date
+            print ts_ascat_vegcorr
+            ts_ascat_vegcorr = ts_ascat_vegcorr.resample('D').mean()
+            data_group['ascat_vegcorr'] = ts_ascat_vegcorr
+
+        if 'amsr2' in satellites:
             # read amsr2 data
             ts_amsr2 = self.amsr2.read(gpi)
             # error handling
@@ -123,8 +157,8 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     data = QDEGdata()
-    ts = data.read_gpi(737696, '2001-01-01', '2016-12-31', 'eraland')#, 'gldas')
-    print ts
-    ts.plot()
+    ts_test = data.read_gpi(750602, '2007-01-01', '2015-12-31',
+                                 model='eraland',
+                                 satellites=['ascat', 'ascat_vegcorr', 'amsr2'])
+    ts_test.plot(title='test')
     plt.show()
-
