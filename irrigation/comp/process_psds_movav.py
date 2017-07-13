@@ -13,7 +13,7 @@ import pandas as pd
 ################################################################################
 # DEFINE PROCESS
 # output folder
-out_root = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results'
+out_root = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/global-normalized-diffquotslopes/'
 
 # information on processing run and location info
 info = 'diffquotslope'
@@ -35,7 +35,7 @@ end = '2013-12-31'
 # global: '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed+irrigated_thresh5_global.csv'
 ################################################################################
 # set path
-gpis_path = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed_cropland_usa.csv'
+gpis_path = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed+irrigated_thresh5_global.csv'
 gpis_lcmask = pd.DataFrame.from_csv(gpis_path)
 
 # init dfs as containers
@@ -73,17 +73,15 @@ for row in gpis_lcmask.itertuples():
         #df_slopes = slopes.slopes_movav(df)
         # local_slopes is differential quotient
         df_slopes = slopes.local_slope(df)
-        print "dfslopes", df_slopes
         df_psd = slopes.psd(df_slopes)
-        print "psd", df_psd
         # aggregate psd for seasons
         psd_sum = slopes.aggregate_psds(df_psd, resampling)
-        print "psds", psd_sum
         # append to sat df
-        # normalize to area fraction
+        # normalize to area fraction # psds[m^3/m^3] / crop_fraction [%] * pixel_area [km^2]
         for key, value in dict_of_dfs.iteritems():
-            # psds[m^3/m^3] / crop_fraction [%] * pixel_area [km^2]
-            value[str(gpi)] = np.divide(psd_sum[key], (crop_fraction * 12.5 * 12.5))
+            #value[str(gpi)] = np.divide((psd_sum[key] * crop_fraction),
+            #                            (12.5 * 12.5))
+            value[str(gpi)] = np.multiply(psd_sum[key], crop_fraction)
 
     except ValueError:
         # ValueError: if no data for gpi
@@ -109,7 +107,7 @@ print "Elapsed time: ", str(datetime.timedelta(seconds=toc - tic))
 
 
 # create basic log file with process information
-logging.basicConfig(filename=os.path.join(out_root,'test_diffquotslope.log'),level=logging.DEBUG)
+logging.basicConfig(filename=os.path.join(out_root,'diffquotslope_global.log'),level=logging.DEBUG)
 logging.info('Model data: {}'.format(model))
 logging.info('Satellite data: {}'.format(satellites))
 logging.info('Date range: {} to {}'.format(start, end))
