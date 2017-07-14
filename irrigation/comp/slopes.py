@@ -30,6 +30,7 @@ def local_slope(df, ref_col='datagap'):
     """
     # calculate changes between observations
     daily_diffs = transform.shift_diff(df, shift=1)
+    print "Dailydiffs:", daily_diffs
     # calc diff qoutient by dividing each ts through the data gap
     datagaps = daily_diffs[ref_col].values
     daily_diffs = daily_diffs.drop(ref_col, axis=1)
@@ -95,9 +96,9 @@ if __name__=='__main__':
     psds_dq = aggregate_psds(psd_dq)
     psds_conv = aggregate_psds(psd_conv)
 
-    print psds_conv
-    print psds_dq
+    print psd_dq.describe()
+    psd_dq['ascat'].plot(x='x', y='y', style=".")
 
-    psds_dq.plot(title='diffquot')
-    psds_conv.plot(title='conv')
+    #psds_dq.plot(title='diffquot')
+    #psds_conv.plot(title='conv')
     plt.show()
