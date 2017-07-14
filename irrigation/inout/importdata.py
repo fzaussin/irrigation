@@ -67,7 +67,7 @@ class QDEGdata(object):
         self.ascat = CCIDs(path_ascat)
         self.amsr2 = CCIDs(path_amsr2)
 
-    def read_gpi(self, gpi, start_date, end_date, model, satellites):
+    def read_gpi(self, gpi, start_date, end_date, model=None, satellites=None):
         """
         :param gpi: grid point index on quarter degree grid
         :param start_date:
