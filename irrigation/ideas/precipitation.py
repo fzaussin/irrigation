@@ -2,6 +2,7 @@ from rsdata.TRMM_TMPA.interface import Tmpa3B42Ts
 from pytesmo.time_series import anomaly
 import numpy as np
 
+
 import matplotlib.pyplot as plt
 import matplotlib
 import matplotlib.dates
@@ -18,7 +19,7 @@ def trmm_reader(lon, lat):
     return trmm_data['pcp']
 
 if __name__=='__main__':
-    lon_station, lat_station = (-5.35883903503418, 41.195999523)
+    lon_station, lat_station = (31.625, 30.875)
     prec_ts_natres = trmm_reader(lon_station, lat_station)
 
     # calc anomaly
@@ -27,7 +28,8 @@ if __name__=='__main__':
 
     monthly_anom = anom.resample('M').sum()
 
-    ax = monthly_anom['2007-01-01':'2013-12-31'].plot(title='TRMM monthly anomaly')
+    ax = monthly_anom.plot(title='TRMM monthly anomaly',
+                                                      ylim = (-20,30))
     ax.set_ylabel(r"Precipitation ($mm$)")
 
     #

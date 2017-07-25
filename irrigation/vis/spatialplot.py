@@ -59,6 +59,15 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='', tag_title
             m.drawcoastlines()
             m.drawcountries()
             m.drawstates()
+        elif region == 'egypt':
+            m = Basemap(llcrnrlon=27.,
+                        llcrnrlat=26,
+                        urcrnrlon=35.,
+                        urcrnrlat=32.5)
+            # set properties
+            m.drawcoastlines()
+            m.drawcountries()
+            m.drawstates()
         else:
             # global
             m = Basemap()
@@ -219,14 +228,16 @@ def lcmask_map(csv_data, map_title=None, path_results=None, fname=None):
 
 if __name__ == '__main__':
     import pandas as pd
-    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/USA_normalized_area_test_v3/diffquotslope_usa_eraland_ascat_reckless_rom_2013-01-01_2013-12-31.csv'
+    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/merra-smap-global/global_merra_smap_2015-04-01_2016-12-31.csv'
     data = pd.DataFrame.from_csv(path)
     #data.rename(columns={'gpi': 'gpi_quarter'}, inplace=True)
     data['gpi_quarter'] = data.index.values
     spatial_plot_quarter_grid(data,
                               title='tag',
-                              region='USA',
-                              cbrange=(0,10),
+                              region='global',
+                              cbrange=(0,40),
                               cblabel=r'$days^{-1}$',
-                              path='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/USA_normalized_area_test_v3',
-                              fname='ascat_reckless_rom')
+                              #cblabel=r'$m^{3}/m^{3}/km^{2}$',
+                              path='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/merra-smap-global',
+                              fname='merra_smap')
+

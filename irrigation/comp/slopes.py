@@ -30,7 +30,6 @@ def local_slope(df, ref_col='datagap'):
     """
     # calculate changes between observations
     daily_diffs = transform.shift_diff(df, shift=1)
-    print "Dailydiffs:", daily_diffs
     # calc diff qoutient by dividing each ts through the data gap
     datagaps = daily_diffs[ref_col].values
     daily_diffs = daily_diffs.drop(ref_col, axis=1)

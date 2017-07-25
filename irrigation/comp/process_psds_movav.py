@@ -13,22 +13,22 @@ import pandas as pd
 ################################################################################
 # DEFINE PROCESS
 # output folder
-out_root = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/global-normalized-diffquotslopes/'
+out_root = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/merra-smap-global'
 
 # information on processing run and location info
-info = 'diffquotslope'
-region = 'usa'
+info = 'global seasonal psds for merra and smap; not multiplied by crop fraction or normalized on area, just plain PSDS!'
+region = 'global'
 
 # define 1 (!) model and multiple satellite datasets
-model = 'eraland'
-satellites = ['ascat', 'ascat_reckless_rom', 'ascat_ultimate_uhnari', 'amsr2']
+model = 'merra'
+satellites = ['smap']
 
 # 'Q-NOV' for seasonal, 'M' for monthly results
-resampling = 'M'
+resampling = 'Q-NOV'
 
 # start- and end-dates of analysis period
-start = '2013-01-01'
-end = '2013-12-31'
+start = '2015-04-01'
+end = '2016-12-31'
 
 # path to gpis
 # usa: '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed_cropland_usa.csv'
@@ -37,18 +37,23 @@ end = '2013-12-31'
 # set path
 gpis_path = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed+irrigated_thresh5_global.csv'
 gpis_lcmask = pd.DataFrame.from_csv(gpis_path)
-
+total_gpis = len(gpis_lcmask)
 # init dfs as containers
 dict_of_dfs = {}
 for sat in satellites:
     dict_of_dfs[str(sat)] = pd.DataFrame()
 
 tic = time.clock()
+counter = 0
 for row in gpis_lcmask.itertuples():
     # error sigsegv for gpi 266372
+    counter = counter + 1
     gpi = row[1]
-    crop_fraction = row[2]
-    print "Gpi #{}, crop-fraction={}".format(gpi, crop_fraction)
+    crop_fraction = row[2] + row[3]
+    print "Processing {model} with {satellites} at gpi #{counter} of {total}".format(model=model,
+                                                                                     satellites=satellites,
+                                                                                     counter=counter,
+                                                                                     total=total_gpis)
     # read smoothed ts
     try:
         df = timeseries.prepare(gpi=gpi,
@@ -81,7 +86,8 @@ for row in gpis_lcmask.itertuples():
         for key, value in dict_of_dfs.iteritems():
             #value[str(gpi)] = np.divide((psd_sum[key] * crop_fraction),
             #                            (12.5 * 12.5))
-            value[str(gpi)] = np.multiply(psd_sum[key], crop_fraction)
+            #value[str(gpi)] = np.divide(psd_sum[key], (crop_fraction*25*25))
+            value[str(gpi)] = psd_sum[key]
 
     except ValueError:
         # ValueError: if no data for gpi
@@ -93,8 +99,7 @@ for row in gpis_lcmask.itertuples():
 for key, value in dict_of_dfs.iteritems():
     df_out = value.transpose()
     # generate fname
-    fname = "{info}_{region}_{model}_{satellite}_{start}_{end}.csv".format(
-        info=info,
+    fname = "{region}_{model}_{satellite}_{start}_{end}.csv".format(
         region=region,
         model=model,
         satellite=key,
@@ -104,10 +109,12 @@ for key, value in dict_of_dfs.iteritems():
 
 toc = time.clock()
 print "Elapsed time: ", str(datetime.timedelta(seconds=toc - tic))
+print "Results saved to: {}".format(out_root)
 
 
 # create basic log file with process information
-logging.basicConfig(filename=os.path.join(out_root,'diffquotslope_global.log'),level=logging.DEBUG)
+logging.basicConfig(filename=os.path.join(out_root,'merra-smap-global.log'), level=logging.DEBUG)
+logging.info('INFORMATION: {}'.format(info))
 logging.info('Model data: {}'.format(model))
 logging.info('Satellite data: {}'.format(satellites))
 logging.info('Date range: {} to {}'.format(start, end))

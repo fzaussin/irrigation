@@ -6,8 +6,8 @@ from irrigation.inout import importdata
 from irrigation.prep import interp, smooth
 
 import matplotlib.pyplot as plt
-import seaborn as sns
-sns.set(style="ticks", context='poster') #, palette=sns.diverging_palette(220, 20, s=90, l=30))
+import matplotlib
+matplotlib.style.use('ggplot')
 
 
 def prepare(gpi, start_date, end_date, model, satellites, kind="clim"):
@@ -132,7 +132,7 @@ def plot_ts(gpi, start_date, end_date, kind="clim", plot=True):
         """
         # scaled
         ax = ts_scaled.plot(title=plot_title+" (Scaled)")
-        sns.despine()
+        #sns.despine()
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         plt.legend(loc='upper left')
@@ -146,13 +146,22 @@ def plot_ts(gpi, start_date, end_date, kind="clim", plot=True):
 if __name__ == "__main__":
     # test func
     # 721798 is mississippi example gpi
-
-    ts = prepare(gpi=727439,
-            start_date='2013-01-01',
-            end_date='2013-12-31',
-            model='eraland',
-            satellites=['ascat','ascat_reckless_rom', 'ascat_ultimate_uhnari', 'amsr2'],
+    # 696362 egypt
+    gpi = 750568
+    ts = prepare(gpi=gpi,
+            start_date='2015-01-01',
+            end_date='2016-12-31',
+            model='merra',
+                 # ['ascat','ascat_ultimate_uhnari', 'amsr2','smap']
+            satellites=['ascat','ascat_ultimate_uhnari', 'amsr2','smap'],
             kind='movav')
     print ts
-    ts.plot()
+
+    #title = 'ERA-Interim/Land reanalysis product (gpi={})'.format(str(gpi))
+    #title = 'GLDAS NOAH v2.1 (gpi={})'.format(str(gpi))
+    title = 'MERRA2 (gpi={})'.format(str(gpi))
+    ax = ts.plot(title=title)
+    ax.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
+    ax.set_xlabel(r"Time")
+
     plt.show()
