@@ -4,8 +4,8 @@ from pytesmo.validation_framework import temporal_matchers
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
-sns.set(style="ticks", context='poster')
+import matplotlib
+matplotlib.style.use('ggplot')
 
 path_to_ismn_data = '/home/fzaussin/shares/users/Irrigation/Data/input/ismn/spain'
 ISMN_reader = ismn.ISMN_Interface(path_to_ismn_data)
@@ -56,7 +56,7 @@ df_sm_prec = pd.DataFrame(index=sm_ts.index)
 df_sm_prec['sm'] = sm_ts
 df_sm_prec['prec'] = prec_ts
 # end date of trmm data
-df_sm_prec = df_sm_prec[:'2015-08-31']
+#df_sm_prec = df_sm_prec[:'2015-08-31']
 
 ax = df_sm_prec['sm'].plot(ylim=(0,1))
 ax.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
