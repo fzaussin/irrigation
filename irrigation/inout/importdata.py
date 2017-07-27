@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 
-import os
 import pandas as pd
 
 # Models
 from gldas.interface import GLDASTs
 from rsdata.ECMWF.interface import ERALAND_g2ze
 from irrigation.inout.merra.interface import MERRA2_Ts
+
 # Satellites
 from smecv.input.common_format import CCIDs
 from pynetcf.time_series import GriddedNcContiguousRaggedTs
 from smap_io.interface import SMAPTs
+
 # Grids
 from pygeogrids.grids import genreg_grid
 import pygeogrids.netcdf as ncgrids
@@ -226,14 +227,14 @@ if __name__ == "__main__":
     from irrigation.prep import interp, smooth
     from pytesmo import scaling
 
-    gpi = 726000
+    gpi = 682112
 
     data = QDEGdata()
-    ts = data.read_gpi(gpi, '2015-04-01', '2016-12-31',
+    ts = data.read_gpi(gpi, '2012-01-01', '2016-12-31',
                        models=['merra'],
                        satellites=['ascat_reckless_rom',
                                    'amsr2',
-                                   'smap',
+                                   #'smap'
                                    ])
 
     ts.dropna(inplace=True)
