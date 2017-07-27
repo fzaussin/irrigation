@@ -23,7 +23,7 @@ def slopes_movav(df):
                                       x)
     return df_slopes
 
-def local_slope(df, ref_col='datagap'):
+def diffquot_slope_movav(df, ref_col='datagap'):
     """
     Calculate slope by means of a differential quotient, e.g.
     (y2-y1)/(x2-x1)
@@ -39,6 +39,13 @@ def local_slope(df, ref_col='datagap'):
         # divide changes in y by changes in x -> local slopes
         df_slopes[series] = np.divide(daily_diffs[series], datagaps)
     return df_slopes
+
+def diffquot_slope_climat(df):
+    """
+    for climat y2-y1 is always 1 yielding a simple subtraction from
+    day x to x+1
+    """
+    return df - df.shift(1)
 
 def slopes_climat(df):
     """operates only on climat"""
@@ -118,7 +125,7 @@ if __name__=='__main__':
                             satellites=['ascat','amsre'],
                             kind='movav')
     # test the two slope functions
-    slopes = local_slope(df)
+    slopes = diffquot_slope_movav(df)
     metric_italians = slope_metric_italians(slopes)
 
 
