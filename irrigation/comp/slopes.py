@@ -72,6 +72,38 @@ def aggregate_psds(df, resampling='Q-NOV'):
     return df.resample(resampling).sum()
 
 
+def slope_metric_italians(df, resampling='Q-NOV', reference_index=0):
+    """
+    Implemenation of the slopes approach of the italians.
+    Counts events where dsm_sat > dsm_mod if:
+    dsm_sat > 0 & dsm_mod <= 0
+    Takes model and satellite slopes as input!
+    :param satellite_slopes:
+    :param ref_idx:
+    :return:
+    """
+    # split into model and satellite data
+    model_slopes = df[df.columns.values[reference_index]]
+    satellite_slopes = df.drop([df.columns.values[reference_index]], axis=1)
+
+    # mask out if model slope is positive (rainfall event)
+    # mask out if satellite slope is not positive
+    model_slopes[model_slopes > 0] = np.nan
+    satellite_slopes[satellite_slopes <= 0] = np.nan
+
+    # satellite - model slope for each day
+    for series in satellite_slopes:
+        slope_diffs = np.subtract(satellite_slopes[series].values, model_slopes.values)
+        satellite_slopes[series] = pd.Series(
+            slope_diffs,
+            index=satellite_slopes.index)
+    # restrict to dsm_sat > dsm_mod
+    pos_slope_diff = satellite_slopes[satellite_slopes > 0]
+    # count events (eg non nan values in the resampled period)
+    return pos_slope_diff.resample('Q-NOV').count()
+
+
+
 if __name__=='__main__':
     import time
     import datetime
@@ -86,17 +118,13 @@ if __name__=='__main__':
                             satellites=['ascat','amsre'],
                             kind='movav')
     # test the two slope functions
-    slopes_diff_quot = local_slope(df)
-    slopes_conv = slopes_movav(df)
-    # calc psd
-    psd_dq = psd(slopes_diff_quot)
-    psd_conv = psd(slopes_conv)
-    # aggregate to psds
-    psds_dq = aggregate_psds(psd_dq)
-    psds_conv = aggregate_psds(psd_conv)
+    slopes = local_slope(df)
+    metric_italians = slope_metric_italians(slopes)
 
-    print psd_dq.describe()
-    psd_dq['ascat'].plot(x='x', y='y', style=".")
+
+    print metric_italians
+    print metric_italians.describe()
+    #psd_dq['ascat'].plot(x='x', y='y', style=".")
 
     #psds_dq.plot(title='diffquot')
     #psds_conv.plot(title='conv')
