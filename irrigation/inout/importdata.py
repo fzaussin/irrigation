@@ -29,22 +29,20 @@ class QDEGdata(object):
         """
         Define paths to data directories and initialize data objects
         """
-        path_warp_grid = ncgrids.load_grid(
-            ('/home/fzaussin/shares/radar/Datapool_processed'
-             '/WARP/ancillary/warp5_grid/TUW_WARP5_grid_info_2_1.nc'))
+        path_warp_grid = ncgrids.load_grid('/home/fzaussin/data/GRIDS/TUW_WARP5_grid_info_2_1.nc')
 
+        # currently used data sets are saved locally for better performance
+        path_ascat_reckless_rom = '/home/fzaussin/data/WARP/reckless_rom'
+        path_amsr2 = '/home/fzaussin/data/AMSR2'
+        path_smap = '/home/fzaussin/data/SMAP_L3_P_v3'
+        path_merra = '/home/fzaussin/data/MERRA'
+
+        # currently not used ds saved under shares
         path_amsre = '/home/fzaussin/shares/users/Irrigation/Data/input/amsre'
-        path_amsr2 = '/home/fzaussin/shares/users/Irrigation/Data/input/amsr2'
         path_ascat = '/home/fzaussin/shares/users/Irrigation/Data/input/ascat-a'
-
-        path_ascat_reckless_rom = ('/home/fzaussin/shares/radar/'
-                                   'Datapool_processed/WARP/datasets/'
-                                   'reckless_rom/R1AB/080_ssm/netcdf')
-        path_smap = '/home/fzaussin/SMAP_L3_P_v3'
-
         path_gldas = ('/home/fzaussin/shares/radar/Datapool_processed/'
                       'GLDAS/GLDAS_NOAH025_3H.2.1/datasets')
-        path_merra = '/home/fzaussin/merra-sfmc'
+
 
         # init data objects
         self.qdeg_grid = genreg_grid(
@@ -231,11 +229,11 @@ if __name__ == "__main__":
     gpi = 726000
 
     data = QDEGdata()
-    ts = data.read_gpi(gpi, '2007-01-01', '2016-12-31',
+    ts = data.read_gpi(gpi, '2015-04-01', '2016-12-31',
                        models=['merra'],
                        satellites=['ascat_reckless_rom',
-                                   #'amsr2',
-                                   #'smap',
+                                   'amsr2',
+                                   'smap',
                                    ])
 
     ts.dropna(inplace=True)
