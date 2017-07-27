@@ -27,8 +27,8 @@ qdeg_grid = genreg_grid(grd_spc_lat=0.25, grd_spc_lon=0.25).to_cell_grid()
 warp_grid_path = '/home/fzaussin/shares/radar/Datapool_processed/WARP/ancillary/warp5_grid/TUW_WARP5_grid_info_2_1.nc'
 warp_grid = ncgrids.load_grid(warp_grid_path)
 # version reckless rom
-warp_path_foxyfinn_R2AB = '/home/fzaussin/shares/radar/Datapool_processed/WARP/datasets/foxy_finn/R2AB/080_ssm/netcdf'
-io_ascat_foxyfinn_R2AB = GriddedNcContiguousRaggedTs(path=warp_path_foxyfinn_R2AB, grid=warp_grid)
+warp_path_reckless_rom = '/home/fzaussin/shares/radar/Datapool_processed/WARP/datasets/reckless_rom/R1AB/080_ssm/netcdf'
+io_ascat_reckless_rom = GriddedNcContiguousRaggedTs(path=warp_path_reckless_rom, grid=warp_grid)
 # version ultimate uhnari -> dynamic slope recommended by sebhahn
 warp_path_ultimate_uhnari = '/home/fzaussin/shares/radar/Datapool_processed/WARP/datasets/ultimate_uhnari/R1A/080_ssm/netcdf/'
 io_ascat_ultimate_uhnari = GriddedNcContiguousRaggedTs(path=warp_path_ultimate_uhnari, grid=warp_grid)
@@ -62,10 +62,10 @@ def merra2_ts(gpi):
     # resample to daily means
     return ts.resample('D').mean()
 
-def ascat_foxyfinn_R2AB(gpi):
+def ascat_reckless_rom(gpi):
     """Read ascat data with new vegetation correction"""
     lon, lat = qdeg2lonlat(gpi)
-    ascat_ts = io_ascat_foxyfinn_R2AB.read(lon, lat)
+    ascat_ts = io_ascat_reckless_rom.read(lon, lat)
     return ascat_ts
 
 def ascat_ultimate_uhnari(gpi):
@@ -168,27 +168,27 @@ class QDEGdata(object):
             ts_ascat.index=ts_ascat.index.date
             data_group['ascat'] = ts_ascat
 
-        if 'ascat_foxyfinn_r2ab' in satellites:
-            ts_ascat_foxyfinn_r2ab = ascat_foxyfinn_R2AB(gpi)
-            if ts_ascat_foxyfinn_r2ab is None:
+        if 'ascat_reckless_rom' in satellites:
+            ts_ascat_reckless_rom = ascat_reckless_rom(gpi)
+            if ts_ascat_reckless_rom is None:
                 print 'No veg_corr ascat data for gpi %0i' % gpi
-                ts_ascat_foxyfinn_r2ab = pd.Series(
+                ts_ascat_reckless_rom = pd.Series(
                     index=pd.date_range(start=start_date, end=end_date))
             else:
-                ts_ascat_foxyfinn_r2ab = ts_ascat_foxyfinn_r2ab[(ts_ascat_foxyfinn_r2ab['proc_flag'] <= 2) & (ts_ascat_foxyfinn_r2ab['ssf'] == 1)][
+                ts_ascat_reckless_rom = ts_ascat_reckless_rom[(ts_ascat_reckless_rom['proc_flag'] <= 2) & (ts_ascat_reckless_rom['ssf'] == 1)][
                     'sm']
                 # drop hours, mins, secs
-                ts_ascat_foxyfinn_r2ab.index = ts_ascat_foxyfinn_r2ab.index.normalize()
+                ts_ascat_reckless_rom.index = ts_ascat_reckless_rom.index.normalize()
             # append to data group
             #ts_ascat_reckless_rom.index = ts_ascat_reckless_rom.index.date
-            ts_ascat_foxyfinn_r2ab = ts_ascat_foxyfinn_r2ab.resample('D').mean()
-            data_group['ascat_foxyfinn_r2ab'] = ts_ascat_foxyfinn_r2ab
+            ts_ascat_reckless_rom = ts_ascat_reckless_rom.resample('D').mean()
+            data_group['ascat_reckless_rom'] = ts_ascat_reckless_rom
 
         if 'ascat_ultimate_uhnari' in satellites:
             ts_ascat_ultimate_uhnari = ascat_ultimate_uhnari(gpi)
             if ts_ascat_ultimate_uhnari is None:
                 print 'No veg_corr ascat data for gpi %0i' % gpi
-                ts_ascat_foxyfinn_r2ab = pd.Series(
+                ts_ascat_reckless_rom = pd.Series(
                     index=pd.date_range(start=start_date, end=end_date))
             else:
                 ts_ascat_ultimate_uhnari = ts_ascat_ultimate_uhnari[(ts_ascat_ultimate_uhnari['proc_flag'] <= 2) & (ts_ascat_ultimate_uhnari['ssf'] == 1)][
@@ -238,29 +238,29 @@ if __name__ == "__main__":
     from irrigation.prep import interp, smooth
     from pytesmo import scaling
 
-    gpi = 680522
+    gpi = 726000
 
     data = QDEGdata()
-    ts_test = data.read_gpi(gpi, '2015-01-01', '2016-12-31',
+    ts_test = data.read_gpi(gpi, '2007-01-01', '2016-12-31',
                                  model='merra',
                                  satellites=[#'ascat',
-                                             #'ascat_foxyfinn_r2ab',
+                                             'ascat_reckless_rom',
                                              #'ascat_ultimate_uhnari',
                                              #'amsr2',
                                              #'amsre',
-                                             'smap'])
+                                             #'smap'
+                                 ])
     # TODO: see first TODO
-    ts_gapfill = interp.iter_fill(ts_test, 5)
-    ts_gapfill.dropna(inplace=True)
-    ts_scaled = scaling.scale(ts_gapfill, 'mean_std', 0)
+    ts_test.dropna(inplace=True)
+    ts_scaled = scaling.scale(ts_test, 'mean_std', 0)
     ts_scaled = ts_scaled.divide(100)
     ts_smooth = smooth.iter_movav(ts_scaled, 35)
 
-    ax = ts_scaled.plot(title=str(gpi), ylim=(0,1))
+    ax = ts_scaled.plot(title=str(gpi))#, ylim=(0,1))
     ax.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
     ax.set_xlabel('Datetime')
 
-    ax2 = ts_smooth.plot(title=str(gpi), ylim=(0, 1))
+    ax2 = ts_smooth.plot(title=str(gpi))#, ylim=(0, 1))
     ax2.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
     ax2.set_xlabel('Datetime')
     plt.show()
