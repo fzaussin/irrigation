@@ -10,24 +10,30 @@ from irrigation.comp import slopes
 import numpy as np
 import pandas as pd
 
+#TODO:TEMP
+from irrigation.inout import importdata
+from pytesmo import scaling
+data = importdata.QDEGdata()
+# TODO:TEMP
 ################################################################################
 # DEFINE PROCESS
 # output folder
-out_root = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/merra-smap-global'
+out_root = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/italians-metric-test-usa'
 
 # information on processing run and location info
-info = 'global seasonal psds for merra and smap; not multiplied by crop fraction or normalized on area, just plain PSDS!'
-region = 'global'
+info = 'Test of the metric the italians used. The considered only slopes where dsm_sat > 0 & dsm_mod <= 0 and counted the ocurrences during the irrigation season' \
+       'these results represent seasonal counts'
+region = 'usa'
 
 # define 1 (!) model and multiple satellite datasets
 model = 'merra'
-satellites = ['smap']
+satellites = ['ascat_reckless_rom', 'amsr2']
 
 # 'Q-NOV' for seasonal, 'M' for monthly results
 resampling = 'Q-NOV'
 
 # start- and end-dates of analysis period
-start = '2015-04-01'
+start = '2013-01-01'
 end = '2016-12-31'
 
 # path to gpis
@@ -35,7 +41,7 @@ end = '2016-12-31'
 # global: '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed+irrigated_thresh5_global.csv'
 ################################################################################
 # set path
-gpis_path = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed+irrigated_thresh5_global.csv'
+gpis_path = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed_cropland_usa.csv'
 gpis_lcmask = pd.DataFrame.from_csv(gpis_path)
 total_gpis = len(gpis_lcmask)
 # init dfs as containers
@@ -49,19 +55,35 @@ for row in gpis_lcmask.itertuples():
     # error sigsegv for gpi 266372
     counter = counter + 1
     gpi = row[1]
-    crop_fraction = row[2] + row[3]
+    # TODO:TEMP
+    #crop_fraction = row[2] + row[3]
+    # TODO:TEMP
     print "Processing {model} with {satellites} at gpi #{counter} of {total}".format(model=model,
                                                                                      satellites=satellites,
                                                                                      counter=counter,
                                                                                      total=total_gpis)
     # read smoothed ts
     try:
+
+        """
         df = timeseries.prepare(gpi=gpi,
                                 start_date=start,
                                 end_date=end,
                                 model=model,
                                 satellites=satellites,
                                 kind='movav')
+        """
+        # TODO:TEMP
+        df = data.read_gpi(gpi=gpi,
+                            start_date=start,
+                            end_date=end,
+                            model=model,
+                            satellites=satellites)
+        # drop nans and scale
+        df = df.dropna()
+        df = scaling.scale(df, 'mean_std', 0)
+        # TODO:TEMP
+
         if df.empty:
             raise IOError
     except (IOError, RuntimeError, ValueError):
@@ -78,9 +100,14 @@ for row in gpis_lcmask.itertuples():
         #df_slopes = slopes.slopes_movav(df)
         # local_slopes is differential quotient
         df_slopes = slopes.local_slope(df)
+        """
         df_psd = slopes.psd(df_slopes)
         # aggregate psd for seasons
         psd_sum = slopes.aggregate_psds(df_psd, resampling)
+        """
+        #TODO: testing the metric of the italians
+        psd_sum = slopes.slope_metric_italians(df_slopes)
+        # TODO:TEMP
         # append to sat df
         # normalize to area fraction # psds[m^3/m^3] / crop_fraction [%] * pixel_area [km^2]
         for key, value in dict_of_dfs.iteritems():
@@ -113,7 +140,7 @@ print "Results saved to: {}".format(out_root)
 
 
 # create basic log file with process information
-logging.basicConfig(filename=os.path.join(out_root,'merra-smap-global.log'), level=logging.DEBUG)
+logging.basicConfig(filename=os.path.join(out_root,'info.log'), level=logging.DEBUG)
 logging.info('INFORMATION: {}'.format(info))
 logging.info('Model data: {}'.format(model))
 logging.info('Satellite data: {}'.format(satellites))
