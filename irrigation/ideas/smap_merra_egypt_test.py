@@ -75,7 +75,7 @@ for row in gpis_lcmask.itertuples():
         # slopes_movav is with convolution
         #df_slopes = slopes.slopes_movav(df)
         # local_slopes is differential quotient
-        df_slopes = slopes.local_slope(df)
+        df_slopes = slopes.diffquot_slope_movav(df)
         df_psd = slopes.psd(df_slopes)
         # aggregate psd for seasons
         psd_sum = slopes.aggregate_psds(df_psd, resampling)
