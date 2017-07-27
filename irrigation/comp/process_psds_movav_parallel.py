@@ -20,17 +20,17 @@ out_root = '/home/fzaussin/Desktop/parallel-test'
 
 # information on processing run and location info
 info = 'parallel test'
-region = 'global'
+region = 'usa'
 
 # define 1 (!) model and multiple satellite datasets
-model = 'merra'
-satellites = ['amsr2', 'ascat_reckless_rom', 'smap']
+models = ['merra']
+satellites = ['ascat_reckless_rom', 'amsr2', 'smap']
 
 # 'Q-NOV' for seasonal, 'M' for monthly results
 resampling = 'Q-NOV'
 
 # start- and end-dates of analysis period
-start = '2015-01-01'
+start = '2015-04-01'
 end = '2016-12-31'
 
 ################################################################################
@@ -44,7 +44,7 @@ def process_in_parallel(gpi):
         df = timeseries.prepare(gpi=gpi,
                                 start_date=start,
                                 end_date=end,
-                                model=model,
+                                models=models,
                                 satellites=satellites,
                                 kind='movav')
         if df.empty:
@@ -53,9 +53,8 @@ def process_in_parallel(gpi):
         print "No data for gpi #{gpi}".format(gpi=gpi)
         return pd.DataFrame()
     try:
-        df_slopes = slopes.local_slope(df)
+        df_slopes = slopes.diffquot_slope_movav(df)
         df_psd = slopes.psd(df_slopes)
-        # aggregate psd for seasons
         psd_sum = slopes.aggregate_psds(df_psd, resampling)
         # associate with corresponding gpi
         psd_sum['gpi'] = gpi
@@ -95,7 +94,7 @@ if __name__=='__main__':
     print "Writing results..."
     fname = "{region}_{model}_{satellite}_{start}_{end}.csv".format(
         region=region,
-        model=model,
+        model=models,
         satellite='-'.join(satellites),
         start=start,
         end=end)
