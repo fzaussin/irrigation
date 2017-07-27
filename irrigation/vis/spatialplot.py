@@ -228,16 +228,16 @@ def lcmask_map(csv_data, map_title=None, path_results=None, fname=None):
 
 if __name__ == '__main__':
     import pandas as pd
-    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/merra-smap-global/global_merra_smap_2015-04-01_2016-12-31.csv'
+    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/italians-metric-test-usa/usa_merra_ascat_reckless_rom_2013-01-01_2016-12-31.csv'
     data = pd.DataFrame.from_csv(path)
     #data.rename(columns={'gpi': 'gpi_quarter'}, inplace=True)
     data['gpi_quarter'] = data.index.values
     spatial_plot_quarter_grid(data,
                               title='tag',
-                              region='global',
-                              cbrange=(0,40),
-                              cblabel=r'$days^{-1}$',
-                              #cblabel=r'$m^{3}/m^{3}/km^{2}$',
-                              path='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/merra-smap-global',
-                              fname='merra_smap')
+                              region='USA',
+                              cbrange=(0,20),
+                              #cblabel=r'$days^{-1}$',
+                              cblabel='Counts',
+                              path='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/italians-metric-test-usa',
+                              fname='merra_ascat_reckless_rom')
 
