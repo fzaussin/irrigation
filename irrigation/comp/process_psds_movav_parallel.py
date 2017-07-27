@@ -24,14 +24,14 @@ region = 'global'
 
 # define 1 (!) model and multiple satellite datasets
 model = 'merra'
-satellites = ['ascat', 'amsr2']
+satellites = ['amsr2', 'ascat_reckless_rom', 'smap']
 
 # 'Q-NOV' for seasonal, 'M' for monthly results
-resampling = 'M'
+resampling = 'Q-NOV'
 
 # start- and end-dates of analysis period
-start = '2013-01-01'
-end = '2013-12-31'
+start = '2015-01-01'
+end = '2016-12-31'
 
 ################################################################################
 
@@ -69,13 +69,13 @@ if __name__=='__main__':
 
     tic = time.time()
     # create gpi list to process
-    gpis_path = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed+irrigated_thresh5_global.csv'
+    gpis_path = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed_cropland_usa.csv'
     gpis_lcmask = pd.DataFrame.from_csv(gpis_path)
-    gpis = gpis_lcmask.index.values
-    gpis = gpis[:100]
+    gpis = gpis_lcmask['gpi_quarter'].values
+    print gpis
 
     # parallel processing
-    pool = mp.Pool(processes=1)
+    pool = mp.Pool(processes=8)
     try:
         # results is list of tuples where [0]=gpi, [1]=dict of data frames
         results = pool.map(process_in_parallel, gpis)
@@ -86,7 +86,7 @@ if __name__=='__main__':
     except TypeError:
         print 'here it is'
         pass
-    # drop gpis where we have no results
+    # drop gpis where we have no data
     cleaned_results = [x for x in results if not x.empty]
     dfs_out = pd.concat(cleaned_results)
     # TODO: MUCH TO DO...
