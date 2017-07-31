@@ -1,18 +1,22 @@
+import os
+import time
+import datetime
+import logging
+
 from irrigation.inout import importdata
 from irrigation.prep import interp
 
-import matplotlib.pyplot as plt
 from pytesmo import scaling
 
 import numpy as np
 import pandas as pd
 
 
-def prepare_ts(gpi, start_date, end_date):
+def prepare_ts(gpi, start_date, end_date, models, satellites):
     """"""
     # read ts
     data_object = importdata.QDEGdata()
-    ts = data_object.read_gpi_old(gpi, start_date, end_date, 'eraland', 'ascat', 'amsre')
+    ts = data_object.read_gpi(gpi, start_date, end_date, models, satellites)
     # gapfill
     ts_gapfill = interp.iter_fill(ts, 5)
     ts_gapfill = ts_gapfill.dropna()
@@ -20,104 +24,157 @@ def prepare_ts(gpi, start_date, end_date):
     ts_scaled = scaling.scale(ts_gapfill, 'mean_std', 0)
     return ts_scaled
 
-def pos_deltas(ts_scaled):
-    # shift one day
+def calc_deltas(ts_scaled):
     ts_copy = ts_scaled.copy()
-    timedelta = pd.Timedelta('1 days')
-    ts_copy_shift1 = ts_copy.shift(1, timedelta)
     # daily changes
-    deltas = ts_copy - ts_copy_shift1
+    deltas = ts_copy - ts_copy.shift(1)
     # positive daily changes
-    pos_deltas = deltas[deltas > 0]
-    return pos_deltas
+    return deltas
 
-def calc_irrig(pos_deltas, resampling='M'):
-    """"""
-    # TODO: difference of resampling before and after subtracting sat - model ??
-    # resample positive increments
-    print pos_deltas
-    resampled_deltas = pos_deltas.resample(resampling).sum()
-    print resampled_deltas
-    # sat - mod
+def calc_irrig(deltas, resampling='Q-NOV'):
+    """
+    Sum of positive sm increments in satellite soil moisture where model sm slopes
+    are zero or negative over the period specified by resampling.
+    :param deltas:
+    :param resampling:
+    :return:
+    """
     reference_index = 0
-    model = resampled_deltas[resampled_deltas.columns.values[reference_index]]
-    df_irrigation = resampled_deltas.drop([resampled_deltas.columns.values[reference_index]], axis=1)
-    for series in df_irrigation:
-        # satellite - model deltas
-        irrigation = np.subtract(df_irrigation[series].values, model.values)
-        df_irrigation[series] = pd.Series(
-            irrigation,
-            index=df_irrigation.index)
+    model_slopes = deltas[deltas.columns.values[reference_index]]
+    satellite_slopes = deltas.drop([deltas.columns.values[reference_index]], axis=1)
 
-    irrig = df_irrigation.resample(resampling).sum()
-    return irrig
+    # apply conditions for irrigation event
+    model_slopes[model_slopes > 0] = np.nan
+    satellite_slopes[satellite_slopes <= 0] = np.nan
+    model_cond_bool = pd.isnull(model_slopes)
+
+    satellite_slopes[model_cond_bool] = np.nan
+    return satellite_slopes.resample(resampling).sum()
 
 
 def irrig_increments(gpi, start_date, end_date, resampling='Q-NOV'):
     """"""
-    ts_scaled = prepare_ts(gpi, start_date, end_date)
-    deltas = pos_deltas(ts_scaled)
+    ts_scaled = prepare_ts(gpi, start_date, end_date, models=['merra'], satellites=['ascat_reckless_rom'])
+    deltas = calc_deltas(ts_scaled)
     irrig = calc_irrig(deltas, resampling)
     return irrig
 
 
-def iterate_gpis(gpi_list):
-    """"""
-
-
 if __name__=='__main__':
     # process for us
-    import time
-    import datetime
+    import matplotlib
+    matplotlib.style.use('ggplot')
+    """
+    #SIMPLE PLOT
+    gpi = 758408
 
-    # set date range
     start_date = '2007-01-01'
-    end_date = '2011-12-31'
-
-    # init output containers
-    df_ascat = pd.DataFrame()
-    df_amsre = pd.DataFrame()
-
-    # path to gpis
-    path = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed_cropland_usa.csv'
-    gpis_lcmask = pd.DataFrame.from_csv(path)
-    gpis = gpis_lcmask['gpi_quarter']
-    gpis = gpis.sort_values()
-
-    tic = time.clock()
-    for gpi in gpis:
-        try:
-            df_irrig = irrig_increments(gpi, start_date, end_date,
-                                        resampling='Q-NOV')
-            print df_irrig
-            df_ascat[str(gpi)] = df_irrig['ascat']
-            df_amsre[str(gpi)] = df_irrig['amsre']
-
-        except (ValueError, IOError, RuntimeError):
-            df_ascat[str(gpi)] = np.nan
-            df_amsre[str(gpi)] = np.nan
-
-    # transpose
-    df_ascat_out = df_ascat.transpose()
-    df_amsre_out = df_amsre.transpose()
-    # save to csv
-    df_ascat_out.to_csv(
-        '/home/fzaussin/Desktop/US-pos-increments-ascat.csv')
-    df_amsre_out.to_csv(
-        '/home/fzaussin/Desktop/US-pos-increments-amsre.csv')
-
-    toc = time.clock()
-    print "Elapsed time: ", str(datetime.timedelta(seconds=toc - tic))
-
-    """ SIMPLE PLOT
-    gpi = 743746
-    start_date = '2007-01-01'
-    end_date = '2013-12-31'
+    end_date = '2016-12-31'
 
     df = prepare_ts(gpi, start_date, end_date)
     df.plot(title='input ts')
 
-    df_irrig = irrig_increments(gpi,start_date, end_date, resampling='Q-NOV')
-    df_irrig.plot(kind='bar', title='positive sm increments')
+    df_irrig = irrig_increments(gpi, start_date, end_date, resampling='Q-NOV')
+    ax = df_irrig.plot(title='Sum of positive satellite soil moisture increments')
+    ax.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
+    ax.set_xlabel('Datetime')
     plt.show()
     """
+    ################################################################################
+    # DEFINE PROCESS
+    # output folder
+    out_root = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/sat-soilmoisture-increments-sum'
+
+    # information on processing run and location info
+    info = 'sum of positive satellite soil moisture increments where the model sm slope is zero or negative'
+    region = 'usa'
+
+    # define 1 (!) model and multiple satellite datasets
+    models = ['merra']
+    satellites = ['ascat_reckless_rom', 'amsr2', 'smap']
+
+    # 'Q-NOV' for seasonal, 'M' for monthly results
+    resampling = 'Q-NOV'
+
+    # start- and end-dates of analysis period
+    start = '2016-01-01'
+    end = '2016-12-31'
+
+    ################################################################################
+    # set path to gpis
+    gpis_path_usa = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed_cropland_usa.csv'
+
+    # create gpi list
+    gpis_lcmask = pd.DataFrame.from_csv(gpis_path_usa)
+    total_gpis = len(gpis_lcmask)
+
+    # init dfs as containers
+    dict_of_dfs = {}
+    for sat in satellites:
+        dict_of_dfs[str(sat)] = pd.DataFrame()
+
+    # iterate over gpis and process at each pixel
+    tic = time.clock()
+    counter = 0
+    for row in gpis_lcmask.itertuples():
+        counter = counter + 1
+        gpi = row[1]
+        crop_fraction = row[2]  # + row[3]
+        print "Processing {model} with {satellites}"" \
+        ""at gpi #{counter} of {total}".format(model=models,
+                                               satellites=satellites,
+                                               counter=counter,
+                                               total=total_gpis)
+        # read smoothed ts
+        try:
+            ts = prepare_ts(gpi=gpi,
+                            start_date=start,
+                            end_date=end,
+                            models=models,
+                            satellites=satellites)
+            if ts.empty:
+                raise IOError
+        except (IOError, RuntimeError, ValueError):
+            print "No data for gpi #{gpi}".format(gpi=gpi)
+            for key, value in dict_of_dfs.iteritems():
+                value[str(gpi)] = np.nan
+            continue
+        try:
+            # calculate slopes
+            deltas = calc_deltas(ts)
+            irrig_sum = calc_irrig(deltas, resampling=resampling)
+
+            # append to sat df
+            for key, value in dict_of_dfs.iteritems():
+                value[str(gpi)] = irrig_sum[key]
+        except ValueError:
+            for key, value in dict_of_dfs.iteritems():
+                value[str(gpi)] = np.nan
+
+    # transpose and save to .csv
+    for key, value in dict_of_dfs.iteritems():
+        df_out = value.transpose()
+        # generate fname
+        fname = "{region}_{model}_{satellite}_{start}_{end}.csv".format(
+            region=region,
+            model=models,
+            satellite=key,
+            start=start,
+            end=end)
+        df_out.to_csv(os.path.join(out_root, fname))
+
+    toc = time.clock()
+    print "Elapsed time: ", str(datetime.timedelta(seconds=toc - tic))
+    print "Results saved to: {}".format(out_root)
+
+    # create basic log file with process information
+    logging.basicConfig(filename=os.path.join(out_root, 'info.log'),
+                        level=logging.DEBUG)
+    logging.info('INFORMATION: {}'.format(info))
+    logging.info('Model data: {}'.format(models))
+    logging.info('Satellite data: {}'.format(satellites))
+    logging.info('Date range: {} to {}'.format(start, end))
+    logging.info(
+        "Elapsed time: {}".format(str(datetime.timedelta(seconds=toc - tic))))
+    logging.info(
+        "Finished processing at {}".format(str(datetime.datetime.now())))
