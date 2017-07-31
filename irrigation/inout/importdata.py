@@ -218,6 +218,72 @@ class QDEGdata(object):
 
         return data_group
 
+    def read_models(self, gpi, start_date, end_date,
+                 models):
+        """
+        Read model and/or satellite soil moisture data at qdeg gpi between
+        a specified date range.
+        :param gpi: grid point index on quarter degree grid
+        :param start_date:
+        :param end_date:
+        :param products:
+        :return: pd.DataFrame
+            Holds time series of the specified products from startdate to enddate
+        """
+        # get lon, lat for gpi
+        lon, lat = self.qdeg2lonlat(gpi)
+        # initialize data container
+        data_group = pd.DataFrame(
+            index=pd.date_range(
+                start=start_date,
+                end=end_date))
+
+        # MODELS
+        if 'eraland' in models:
+            ts_era = self.eraland.read_ts(lon, lat)
+            # error handling
+            if ts_era is None:
+                print 'No eraland data for gpi %0i' % gpi
+                ts_era = pd.Series(
+                    index=pd.date_range(
+                        start=start_date,
+                        end=end_date))
+            else:
+                ts_era = ts_era[start_date:end_date]
+                # append to data_group
+            # scale percentage values from [0,1] to [0,100]
+            data_group['eraland'] = ts_era * 100
+
+        if 'gldas' in models:
+            ts_gldas = self.gldas.read(lon, lat)
+            # error handling
+            if ts_gldas is None:
+                print 'No gldas data for gpi %0i' % gpi
+                ts_gldas = pd.Series(
+                    index=pd.date_range(
+                        start=start_date,
+                        end=end_date))
+            else:
+                ts_gldas = ts_gldas[start_date:end_date]
+                # append to data_group
+            data_group['gldas'] = ts_gldas['SoilMoi0_10cm_inst']
+
+        if 'merra' in models:
+            ts_merra = self.merra.read(lon, lat)
+            # error handling
+            if ts_merra is None:
+                print 'No merra data for gpi %0i' % gpi
+                ts_merra = pd.Series(
+                    index=pd.date_range(
+                        start=start_date,
+                        end=end_date))
+            else:
+                ts_merra = ts_merra[start_date:end_date]
+                # append to data_group
+            data_group['merra'] = ts_merra.resample('D').mean() * 100
+
+        return data_group
+
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
@@ -227,11 +293,18 @@ if __name__ == "__main__":
     from irrigation.prep import interp, smooth
     from pytesmo import scaling
 
-    gpi = 682112
-
+    gpi = 752008
     data = QDEGdata()
-    ts = data.read_gpi(gpi, '2012-01-01', '2016-12-31',
-                       models=['merra'],
+
+    ts_models = data.read_models(gpi, '2007-01-01', '2016-12-31',
+                       models=['merra', 'eraland', 'gldas'])
+
+    ts_models.plot()
+    plt.show()
+
+    """
+    ts = data.read_gpi(gpi, '2000-01-01', '2013-12-31',
+                       models=['merra', 'eraland', 'gldas'],
                        satellites=['ascat_reckless_rom',
                                    'amsr2',
                                    #'smap'
@@ -250,3 +323,4 @@ if __name__ == "__main__":
     ax2.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
     ax2.set_xlabel('Datetime')
     plt.show()
+    """
