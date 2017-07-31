@@ -228,11 +228,10 @@ def lcmask_map(csv_data, map_title=None, path_results=None, fname=None):
 
 if __name__ == '__main__':
     import pandas as pd
-    path = "/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/merra-ascatreckrom-usa-2007-2016-jja-climat-psds/usa-jja-climats-merra-ascatreckrom-200701-201612.csv"
+    path = "/home/fzaussin/shares/users/Irrigation/Data/output/new-results/usa-test/usa_['merra']_amsr2_2012-01-01_2016-12-31.csv"
     data = pd.DataFrame.from_csv(path)
-    data = data['ascat'] * 100
-    data.rename(columns={'gpi': 'gpi_quarter'}, inplace=True)
-    #data['gpi_quarter'] = data.index.values
+    #data.rename(columns={'gpi': 'gpi_quarter'}, inplace=True)
+    data['gpi_quarter'] = data.index.values
 
     spatial_plot_quarter_grid(data,
                               title='tag',
@@ -240,6 +239,6 @@ if __name__ == '__main__':
                               cbrange=(0,20),
                               cblabel=r'$days^{-1}$',
                               #cblabel='Counts',
-                              path='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/merra-ascatreckrom-usa-2007-2016-jja-climat-psds',
-                              fname='merra_ascat_reckless_rom')
+                              path="/home/fzaussin/shares/users/Irrigation/Data/output/new-results/usa-test",
+                              fname='merra_amsr2')
 
