@@ -13,11 +13,11 @@ import pandas as pd
 ################################################################################
 # DEFINE PROCESS
 # output folder
-out_root = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/pakistan-test'
+out_root = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/usa-test'
 
 # information on processing run and location info
-info = 'test for pakistan without masking'
-region = 'pakistan'
+info = 'test for usa without masking'
+region = 'usa'
 
 # define 1 (!) model and multiple satellite datasets
 models = ['merra']
@@ -34,10 +34,10 @@ end = '2016-12-31'
 # set path to gpis
 gpis_path_usa = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed_cropland_usa.csv'
 gpis_path_global = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LCMASK_rainfed+irrigated_thresh5_global.csv'
-gpis_pakistan = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/pointlist_Pakistan_quarter.csv'
+gpis_usa = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/QDEG_pointlist_USA_cut.csv'
 
 # create gpi list
-gpis_lcmask = pd.read_csv(gpis_pakistan)
+gpis_lcmask = pd.read_csv(gpis_usa)
 #gpis_lcmask = pd.DataFrame.from_csv(gpis_path_usa)
 total_gpis = len(gpis_lcmask)
 
