@@ -23,7 +23,7 @@ def slopes_movav(df):
                                       x)
     return df_slopes
 
-def diffquot_slope_movav(df, ref_col='datagap'):
+def diffquot_slope(df, ref_col='datagap'):
     """
     Calculate slope by means of a differential quotient, e.g.
     (y2-y1)/(x2-x1)
@@ -115,22 +115,45 @@ if __name__=='__main__':
     import time
     import datetime
     import matplotlib.pyplot as plt
-    from irrigation.prep import timeseries
+    import matplotlib
+    matplotlib.style.use('ggplot')
+    from irrigation.prep import timeseries, interp
 
-    gpi = 721798
+
+
+    gpi = 789361 #711621
+
+    window = 35
+
+    climat = timeseries.prepare(gpi=gpi,
+                            start_date='2007-01-01',
+                            end_date='2016-12-31',
+                            models=['merra'],
+                            satellites=['ascatrecklessrom'],
+                            kind='clim')
+    climat.plot(title = 'Gpi={}'.format(gpi))
+
+
     df = timeseries.prepare(gpi=gpi,
                             start_date='2007-01-01',
-                            end_date='2011-12-31',
-                            model='eraland',
-                            satellites=['ascat','amsre'],
-                            kind='movav')
+                            end_date='2016-12-31',
+                            models=['merra'],
+                            satellites=['ascatrecklessrom','amsr2', 'smapv4am'],
+                            kind='movav',
+                            window=window)
+
+    title = 'Gpi={}, window-size={} days'.format(gpi, window)
     # test the two slope functions
-    slopes = diffquot_slope_movav(df)
-    metric_italians = slope_metric_italians(slopes)
+    ax = df.plot(title=title)
+
+    #slopes = diffquot_slope_movav(df)
+    #pos_diffs = psd(slopes)
+    #pos_diffs_sum = aggregate_psds(pos_diffs)
+    #pos_diffs_sum.plot(title=title)
+    #metric_italians = slope_metric_italians(slopes)
 
 
-    print metric_italians
-    print metric_italians.describe()
+
     #psd_dq['ascat'].plot(x='x', y='y', style=".")
 
     #psds_dq.plot(title='diffquot')
