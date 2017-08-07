@@ -8,13 +8,13 @@ from smap_io.interface import SMAPTs
 import interp
 
 # init paths
-path = '/home/fzaussin/SMAP_L3_P_v3'
-grid = pygeogrids.netcdf.load_grid('/home/fzaussin/SMAP_L3_P_v3/grid.nc')
+path = '/home/fzaussin/data/SMAP_L3_P_v3'
+grid = pygeogrids.netcdf.load_grid('/home/fzaussin/data/SMAP_L3_P_v3/grid.nc')
 
 
 # find gpi
-lat = 41.625
-lon = 60.625
+lat = 36.55
+lon = -119.86
 gpi_nn = grid.find_nearest_gpi(lon=lon, lat=lat)
 print gpi_nn
 gpi = gpi_nn[0]
