@@ -13,21 +13,23 @@ import pandas as pd
 ################################################################################
 # DEFINE PROCESS
 # output folder
-out_root = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/usa-test'
+out_root = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/14-day-movav-window/seasonal'
 
 # information on processing run and location info
-info = 'test for usa without masking'
+info = 'Monthly psds, NOT normalized' \
+       '8TUNG: processed with 35 days moving average window!!!'
 region = 'usa'
 
 # define 1 (!) model and multiple satellite datasets
 models = ['merra']
-satellites = ['ascat_reckless_rom', 'amsr2']
+satellites = ['ascatrecklessrom', 'amsr2', 'smapv4', 'smap']
 
 # 'Q-NOV' for seasonal, 'M' for monthly results
 resampling = 'Q-NOV'
+window = 14
 
 # start- and end-dates of analysis period
-start = '2012-01-01'
+start = '2015-01-01'
 end = '2016-12-31'
 
 ################################################################################
@@ -37,8 +39,7 @@ gpis_path_global = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/LC
 gpis_usa = '/home/fzaussin/shares/users/Irrigation/Data/lookup-tables/QDEG_pointlist_USA_cut.csv'
 
 # create gpi list
-gpis_lcmask = pd.read_csv(gpis_usa)
-#gpis_lcmask = pd.DataFrame.from_csv(gpis_path_usa)
+gpis_lcmask = pd.DataFrame.from_csv(gpis_path_usa)
 total_gpis = len(gpis_lcmask)
 
 # init dfs as containers
@@ -65,7 +66,8 @@ for row in gpis_lcmask.itertuples():
                                 end_date=end,
                                 models=models,
                                 satellites=satellites,
-                                kind='movav')
+                                kind='movav',
+                                window=window)
         if df.empty:
             raise IOError
     except (IOError, RuntimeError, ValueError):
@@ -75,9 +77,11 @@ for row in gpis_lcmask.itertuples():
         continue
     try:
         # calculate slopes
-        df_slopes = slopes.diffquot_slope_movav(df)
+        df_slopes = slopes.diffquot_slope(df)
         df_psd = slopes.psd(df_slopes)
         psd_sum = slopes.aggregate_psds(df_psd, resampling)
+        # divide by fractional crop AREA (!)
+        #psd_sum = np.divide(psd_sum, (crop_fraction*25*25))
 
         # append to sat df
         for key, value in dict_of_dfs.iteritems():
@@ -92,7 +96,7 @@ for key, value in dict_of_dfs.iteritems():
     # generate fname
     fname = "{region}_{model}_{satellite}_{start}_{end}.csv".format(
         region=region,
-        model=models,
+        model=''.join(models),
         satellite=key,
         start=start,
         end=end)
@@ -106,7 +110,7 @@ print "Results saved to: {}".format(out_root)
 # create basic log file with process information
 logging.basicConfig(filename=os.path.join(out_root,'info.log'), level=logging.DEBUG)
 logging.info('INFORMATION: {}'.format(info))
-logging.info('Model data: {}'.format(models))
+logging.info('Model data: {}'.format(''.join(models)))
 logging.info('Satellite data: {}'.format(satellites))
 logging.info('Date range: {} to {}'.format(start, end))
 logging.info("Elapsed time: {}".format(str(datetime.timedelta(seconds=toc - tic))))
