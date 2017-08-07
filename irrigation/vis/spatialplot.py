@@ -16,7 +16,7 @@ from mpl_toolkits.basemap import Basemap
 # use seaborn style
 import seaborn as sns
 sns.set_style("white")
-sns.set(rc={'axes.facecolor':'#f0f0f0', 'figure.facecolor':'#f0f0f0'})
+sns.set(rc={'axes.facecolor':'#ffffff', 'figure.facecolor':'#ffffff'})
 
 
 def spatial_plot_quarter_grid(data, tags=None, region='USA', title='', tag_title=False,
@@ -56,9 +56,10 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='', tag_title
                         lat_ts=50, lat_0=38.7, lon_0=-97.5,
                         resolution='c')
             # set properties
-            m.drawcoastlines()
-            m.drawcountries()
-            m.drawstates()
+            m.drawcoastlines(color='#191919', zorder=2)
+            m.drawcountries(color='#333333', zorder=2)
+            m.drawstates(color='#666666', zorder=2)
+            m.fillcontinents(color='#f2f2f2', zorder=0)
         elif region == 'egypt':
             m = Basemap(llcrnrlon=27.,
                         llcrnrlat=26,
@@ -74,7 +75,7 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='', tag_title
             m.drawcoastlines()
             m.drawcountries()
 
-        im = m.pcolormesh(lons, lats, img_masked, cmap=cmap, latlon=True)
+        im = m.pcolormesh(lons, lats, img_masked, cmap=cmap, latlon=True, zorder=1)
 
         # auto scaling
         if cbrange is not None:
@@ -228,17 +229,30 @@ def lcmask_map(csv_data, map_title=None, path_results=None, fname=None):
 
 if __name__ == '__main__':
     import pandas as pd
-    path = "/home/fzaussin/shares/users/Irrigation/Data/output/new-results/usa-test/usa_['merra']_amsr2_2012-01-01_2016-12-31.csv"
+
+    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/35-day-movav-window/seasonal/usa_merra_smapv4_2015-01-01_2016-12-31.csv'
     data = pd.DataFrame.from_csv(path)
+
+    #threshhold = 30
+    #data[data < threshhold] = np.nan
+
+    #print data[data['irrig_fraction'] != 0.].head()
+    #data['irrig_fraction'][data['irrig_fraction'] != 0.] = 1.
+    #print data[data['irrig_fraction'] != 0.].head()
+
     #data.rename(columns={'gpi': 'gpi_quarter'}, inplace=True)
     data['gpi_quarter'] = data.index.values
+
+    dir = os.path.split(path)[0]
+    fname = os.path.split(path)[1]
+    region, mod, sat = fname.split('_')[:3]
 
     spatial_plot_quarter_grid(data,
                               title='tag',
                               region='USA',
-                              cbrange=(0,20),
+                              cbrange=(0,10),
+                              cmap='Greens',
+                              #cblabel=r'$m^{3}/m^{3} per km^{2}$',
                               cblabel=r'$days^{-1}$',
-                              #cblabel='Counts',
-                              path="/home/fzaussin/shares/users/Irrigation/Data/output/new-results/usa-test",
-                              fname='merra_amsr2')
-
+                              path=dir,
+                              fname='{}_{}'.format(mod, sat))# + '_v4')
