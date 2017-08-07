@@ -25,8 +25,11 @@ results = []
 
 tic = time.clock()
 counter = 0
-for gpi in gpis:
+for row in gpis_lcmask.itertuples():
     counter += 1
+
+    gpi = row[1]
+    crop_fraction = row[2]
     print "Processing gpi #{} of {}".format(counter, total_gpis)
     # exemplary slopes calc from climats for JJA
     # 721798 is mississippi example gpi
@@ -47,7 +50,8 @@ for gpi in gpis:
         psdiffs = slopes.psd(climat_slopes)
         # slopes for JJA climat
         psdiffs_sum = psdiffs[151:243].sum()
-        ascat = psdiffs_sum[0]
+        # divide by fractional crop AREA (!)
+        ascat = np.divide(psdiffs_sum[0], (crop_fraction*25*25))
     except ValueError:
         # ValueError: if no data for gpi
         # IOError: if index for location id not found (gldas problem only?)
@@ -57,6 +61,6 @@ for gpi in gpis:
 toc = time.clock()
 
 df_results = pd.DataFrame(results, columns=('gpi', 'ascat'))
-df_results.to_csv('/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/usa-jja-climats-merra-ascatreckrom-200701-201612.csv')
+df_results.to_csv('/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/NORMALIZED_AREA/merra-ascatreckrom-usa-2007-2016-jja-climat-psds.csv')
 
 print "Elapsed time: ", str(datetime.timedelta(seconds=toc-tic))
