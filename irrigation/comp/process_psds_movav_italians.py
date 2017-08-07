@@ -79,7 +79,7 @@ for row in gpis_lcmask.itertuples():
         # slopes_movav is with convolution
         #df_slopes = slopes.slopes_movav(df)
         # local_slopes is differential quotient
-        df_slopes = slopes.diffquot_slope_movav(df)
+        df_slopes = slopes.diffquot_slope(df)
 
         #TODO: testing the metric of the italians
         psd_sum = slopes.slope_metric_italians(df_slopes)
