@@ -36,6 +36,9 @@ class QDEGdata(object):
         path_ascat_reckless_rom = '/home/fzaussin/data/WARP/reckless_rom'
         path_amsr2 = '/home/fzaussin/data/AMSR2'
         path_smap = '/home/fzaussin/data/SMAP_L3_P_v3'
+        # TODO: temporary solution, combine into one cell structure later
+        path_smap_v4_am = '/home/fzaussin/data/SPL3SMP_v4/AM_descending'
+        path_smap_v4_pm = '/home/fzaussin/data/SPL3SMP_v4/PM_ascending'
         path_merra = '/home/fzaussin/data/MERRA'
 
         # currently not used ds saved under shares
@@ -56,6 +59,9 @@ class QDEGdata(object):
         self.ascat_reckless_rom = GriddedNcContiguousRaggedTs(
             path=path_ascat_reckless_rom, grid=path_warp_grid)
         self.smap = SMAPTs(path_smap)
+        # TODO: temporary solution, combine into one cell structure later
+        self.smap_v4_am = SMAPTs(path_smap_v4_am)
+        self.smap_v4_pm = SMAPTs(path_smap_v4_pm)
 
         self.eraland = ERALAND_g2ze()
         self.merra = MERRA2_Ts(ts_path=path_merra)
@@ -103,8 +109,7 @@ class QDEGdata(object):
             else:
                 ts_era = ts_era[start_date:end_date]
                 # append to data_group
-            # scale percentage values from [0,1] to [0,100]
-            data_group['eraland'] = ts_era * 100
+            data_group['eraland'] = ts_era
 
         if 'gldas' in models:
             ts_gldas = self.gldas.read(lon, lat)
@@ -132,7 +137,7 @@ class QDEGdata(object):
             else:
                 ts_merra = ts_merra[start_date:end_date]
                 # append to data_group
-            data_group['merra'] = ts_merra.resample('D').mean() * 100
+            data_group['merra'] = ts_merra.resample('D').mean()
 
         # SATELLITES
         if 'amsre' in satellites:
@@ -165,9 +170,9 @@ class QDEGdata(object):
                                     0]['sm'][start_date:end_date]
             # append to data_group
             ts_ascat.index = ts_ascat.index.date
-            data_group['ascat'] = ts_ascat
+            data_group['ascat'] = ts_ascat.divide(100)
 
-        if 'ascat_reckless_rom' in satellites:
+        if 'ascatrecklessrom' in satellites:
             ts_ascat_reckless_rom = self.ascat_reckless_rom.read(lon, lat)
             if ts_ascat_reckless_rom is None:
                 print 'No veg_corr ascat data for gpi %0i' % gpi
@@ -181,11 +186,12 @@ class QDEGdata(object):
                 ts_ascat_reckless_rom.index = ts_ascat_reckless_rom.index.normalize()
             # append to data group
             ts_ascat_reckless_rom = ts_ascat_reckless_rom.resample('D').mean()
-            data_group['ascat_reckless_rom'] = ts_ascat_reckless_rom
+            data_group['ascat_reckless_rom'] = ts_ascat_reckless_rom.divide(100)
 
         if 'amsr2' in satellites:
             # read amsr2 data
             ts_amsr2 = self.amsr2.read(lon, lat)
+            print ts_amsr2.head()
             # error handling
             if ts_amsr2 is None:
                 print 'No amsr2 data for gpi %0i' % gpi
@@ -198,10 +204,10 @@ class QDEGdata(object):
                                     0]['sm'][start_date:end_date]
             # append to data_group
             ts_amsr2.index = ts_amsr2.index.date
-            data_group['amsr2'] = ts_amsr2
+            data_group['amsr2'] = ts_amsr2.divide(100)
 
         if 'smap' in satellites:
-            # read amsr2 data
+            # read smap v3 data
             ts_smap = self.smap.read(lon, lat)
             # error handling
             if ts_smap is None:
@@ -214,7 +220,45 @@ class QDEGdata(object):
                 ts_smap = ts_smap['soil_moisture'][start_date:end_date]
             # append to data_group
                 ts_smap.index = ts_smap.index.date
-            data_group['smap'] = ts_smap * 100
+            data_group['smap'] = ts_smap
+
+        if 'smapv4' in satellites:
+            # read smap v4 data
+            ts_smapv4_am = self.smap_v4_am.read(lon, lat)
+            ts_smapv4_pm = self.smap_v4_pm.read(lon, lat)
+            ts_smapv4 = pd.concat([ts_smapv4_am['soil_moisture'],
+                                   ts_smapv4_pm['soil_moisture_pm']], axis=1)
+            ts_smapv4['combined'] = ts_smapv4['soil_moisture'].fillna(ts_smapv4['soil_moisture_pm'])
+
+            # error handling
+            if ts_smapv4 is None:
+                print 'No smap data for gpi %0i' % gpi
+                ts_smap = pd.Series(
+                    index=pd.date_range(
+                        start=start_date,
+                        end=end_date))
+            else:
+                ts_smapv4 = ts_smapv4['combined'][start_date:end_date]
+            # append to data_group
+                ts_smapv4.index = ts_smapv4.index.date
+            data_group['smapv4'] = ts_smapv4
+
+        if 'smapv4am' in satellites:
+            # read smap v4 data
+            ts_smapv4_am = self.smap_v4_am.read(lon, lat)
+
+            # error handling
+            if ts_smapv4_am is None:
+                print 'No smap data for gpi %0i' % gpi
+                ts_smap = pd.Series(
+                    index=pd.date_range(
+                        start=start_date,
+                        end=end_date))
+            else:
+                ts_smapv4_am = ts_smapv4_am['soil_moisture'][start_date:end_date]
+            # append to data_group
+                ts_smapv4_am.index = ts_smapv4_am.index.date
+            data_group['smapv4am'] = ts_smapv4_am
 
         return data_group
 
@@ -252,7 +296,7 @@ class QDEGdata(object):
                 ts_era = ts_era[start_date:end_date]
                 # append to data_group
             # scale percentage values from [0,1] to [0,100]
-            data_group['eraland'] = ts_era * 100
+            data_group['eraland'] = ts_era
 
         if 'gldas' in models:
             ts_gldas = self.gldas.read(lon, lat)
@@ -280,7 +324,7 @@ class QDEGdata(object):
             else:
                 ts_merra = ts_merra[start_date:end_date]
                 # append to data_group
-            data_group['merra'] = ts_merra.resample('D').mean() * 100
+            data_group['merra'] = ts_merra.resample('D').mean()
 
         return data_group
 
@@ -293,9 +337,10 @@ if __name__ == "__main__":
     from irrigation.prep import interp, smooth
     from pytesmo import scaling
 
-    gpi = 752008
+    gpi = 733196
     data = QDEGdata()
 
+    """
     ts_models = data.read_models(gpi, '2007-01-01', '2016-12-31',
                        models=['merra', 'eraland', 'gldas'])
 
@@ -303,16 +348,15 @@ if __name__ == "__main__":
     plt.show()
 
     """
-    ts = data.read_gpi(gpi, '2000-01-01', '2013-12-31',
-                       models=['merra', 'eraland', 'gldas'],
-                       satellites=['ascat_reckless_rom',
+    ts = data.read_gpi(gpi, '2007-01-01', '2016-12-31',
+                       models=['merra'],
+                       satellites=['ascatrecklessrom',
                                    'amsr2',
-                                   #'smap'
+                                   'smapv4'
                                    ])
-
+    print ts
     ts.dropna(inplace=True)
     ts_scaled = scaling.scale(ts, 'mean_std', 0)
-    ts_scaled = ts_scaled.divide(100)
     ts_smooth = smooth.iter_movav(ts_scaled, 35)
 
     ax = ts_scaled.plot(title=str(gpi))  # , ylim=(0,1))
@@ -323,4 +367,3 @@ if __name__ == "__main__":
     ax2.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
     ax2.set_xlabel('Datetime')
     plt.show()
-    """
