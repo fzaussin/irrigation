@@ -23,7 +23,7 @@ ax.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
 ax.set_xlabel('Datetime')
 
 # count irrig events
-df_slopes = slopes.diffquot_slope_movav(ts_scaled)
+df_slopes = slopes.diffquot_slope(ts_scaled)
 irrig_counts = slopes.slope_metric_italians(df_slopes)
 
 # plot
