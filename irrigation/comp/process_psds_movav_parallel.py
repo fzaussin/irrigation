@@ -53,7 +53,7 @@ def process_in_parallel(gpi):
         print "No data for gpi #{gpi}".format(gpi=gpi)
         return pd.DataFrame()
     try:
-        df_slopes = slopes.diffquot_slope_movav(df)
+        df_slopes = slopes.diffquot_slope(df)
         df_psd = slopes.psd(df_slopes)
         psd_sum = slopes.aggregate_psds(df_psd, resampling)
         # associate with corresponding gpi
