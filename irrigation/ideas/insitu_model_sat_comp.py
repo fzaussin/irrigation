@@ -97,7 +97,7 @@ axtrmm = prec_ts_1d.plot()
 axtrmm.set_ylabel(r"Precipitation ($mm$)")
 
 # SLOPES INSITU - MODEL
-slopes_insitu_model = slopes.diffquot_slope_movav(smoothed_data)
+slopes_insitu_model = slopes.diffquot_slope(smoothed_data)
 psd_insitu_model = slopes.psd(slopes_insitu_model)
 psd_monthly = slopes.aggregate_psds(psd_insitu_model, resampling='M')
 # plot
