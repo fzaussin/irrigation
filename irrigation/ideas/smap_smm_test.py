@@ -62,23 +62,26 @@ def irrig_increments(gpi, start_date, end_date, resampling='Q-NOV'):
 
 if __name__=='__main__':
     # process for us
+    import matplotlib.pyplot as plt
     import matplotlib
     matplotlib.style.use('ggplot')
-    """
+
     #SIMPLE PLOT
-    gpi = 758408
+    gpi = 757757
 
     start_date = '2007-01-01'
     end_date = '2016-12-31'
 
-    df = prepare_ts(gpi, start_date, end_date)
+    df = prepare_ts(gpi, start_date, end_date, ['merra'], ['ascat_reckless_rom'])
     df.plot(title='input ts')
 
     df_irrig = irrig_increments(gpi, start_date, end_date, resampling='Q-NOV')
+    df_irrig = df_irrig.resample('A').sum()
     ax = df_irrig.plot(title='Sum of positive satellite soil moisture increments')
     ax.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
     ax.set_xlabel('Datetime')
     plt.show()
+
     """
     ################################################################################
     # DEFINE PROCESS
@@ -178,3 +181,4 @@ if __name__=='__main__':
         "Elapsed time: {}".format(str(datetime.timedelta(seconds=toc - tic))))
     logging.info(
         "Finished processing at {}".format(str(datetime.datetime.now())))
+    """
