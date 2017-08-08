@@ -118,12 +118,10 @@ if __name__=='__main__':
     import matplotlib
     matplotlib.style.use('ggplot')
     from irrigation.prep import timeseries, interp
+    from irrigation.trans.transform import qdeg2lonlat
 
-
-
-    gpi = 789361 #711621
-
-    window = 35
+    gpi = 789361
+    location = ''
 
     climat = timeseries.prepare(gpi=gpi,
                             start_date='2007-01-01',
@@ -131,31 +129,6 @@ if __name__=='__main__':
                             models=['merra'],
                             satellites=['ascatrecklessrom'],
                             kind='clim')
-    climat.plot(title = 'Gpi={}'.format(gpi))
-
-
-    df = timeseries.prepare(gpi=gpi,
-                            start_date='2007-01-01',
-                            end_date='2016-12-31',
-                            models=['merra'],
-                            satellites=['ascatrecklessrom','amsr2', 'smapv4am'],
-                            kind='movav',
-                            window=window)
-
-    title = 'Gpi={}, window-size={} days'.format(gpi, window)
-    # test the two slope functions
-    ax = df.plot(title=title)
-
-    #slopes = diffquot_slope_movav(df)
-    #pos_diffs = psd(slopes)
-    #pos_diffs_sum = aggregate_psds(pos_diffs)
-    #pos_diffs_sum.plot(title=title)
-    #metric_italians = slope_metric_italians(slopes)
-
-
-
-    #psd_dq['ascat'].plot(x='x', y='y', style=".")
-
-    #psds_dq.plot(title='diffquot')
-    #psds_conv.plot(title='conv')
-    plt.show()
+    # calc psd
+    slopes_climat = diffquot_slope_climat(climat)
+    pos_slope_diffs = psd(slopes_climat)
