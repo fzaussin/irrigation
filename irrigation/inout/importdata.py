@@ -191,7 +191,6 @@ class QDEGdata(object):
         if 'amsr2' in satellites:
             # read amsr2 data
             ts_amsr2 = self.amsr2.read(lon, lat)
-            print ts_amsr2.head()
             # error handling
             if ts_amsr2 is None:
                 print 'No amsr2 data for gpi %0i' % gpi
