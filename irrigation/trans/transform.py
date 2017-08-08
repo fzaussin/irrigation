@@ -1,5 +1,9 @@
+# -*- coding: utf-8 -*-
+
 import numpy as np
 import pandas as pd
+
+from pygeogrids.grids import genreg_grid
 
 def calc_gaps(df):
     """ appends a column to a df with datetime index indicating data gaps in days"""
@@ -20,3 +24,16 @@ def shift_diff(df, shift=1):
     df_slopes['datagap'] = df_slopes['datagap'] / np.timedelta64(1,'D')
     return df_slopes
 
+
+def qdeg2lonlat(gpi):
+    """
+    Return lon and lat for a given 0.25° grid point index
+    :param gpi:
+    :return: lon, lat
+    """
+    qdeg_grid = genreg_grid(
+        grd_spc_lat=0.25,
+        grd_spc_lon=0.25).to_cell_grid()
+
+    lon, lat = qdeg_grid.gpi2lonlat(gpi)
+    return lon, lat * (-1)
