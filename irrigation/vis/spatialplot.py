@@ -124,7 +124,7 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='', tag_title
                         facecolor=fig.get_facecolor())
 
 
-def spatial_plot(data, lons, lats):
+def spatial_plot(data, lons, lats, cbrange=(0,100)):
     """
 
     :param data:
@@ -143,14 +143,13 @@ def spatial_plot(data, lons, lats):
     m.drawcountries()
     m.drawstates()
 
-    plt.title("Test")
-
     # create img
-    im = m.pcolormesh(lons, lats, data, cmap='YlGn', latlon=True)
+    im = m.pcolormesh(lons, lats, data, cmap='coolwarm', latlon=True)
+    cbar = plt.colorbar(im, pad=0.01)
+    im.set_clim(vmin=cbrange[0], vmax=cbrange[1])
 
-
+    plt.tight_layout()
     plt.show()
-    pass
 
 
 def map_maker(csv_data, map_title=None, path_results=None, fname=None):
@@ -230,10 +229,19 @@ def lcmask_map(csv_data, map_title=None, path_results=None, fname=None):
 if __name__ == '__main__':
     import pandas as pd
 
-    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/35-day-movav-window/seasonal/usa_merra_smapv4_2015-01-01_2016-12-31.csv'
+    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/ascat-merra-climat-based.csv'
+    path = '/home/fzaussin/shares/home/mirad-25km/mirad25km_irrigation_lon_lat_gpi.csv'
     data = pd.DataFrame.from_csv(path)
+    #data['gpi_quarter'] = data.index.values
 
-    #threshhold = 30
+    # mirad
+    data.irrigation[data.irrigation < 5] = 0
+    data.irrigation[data.irrigation >= 5] = 1
+    data.to_csv('/home/fzaussin/shares/home/mirad-25km/mirad25km_binary_irrig_fraction>=5.csv')
+    #data.irrigation[data.irrigation < 10] = np.nan
+
+    # apply threshhold
+    #threshhold = 0.15
     #data[data < threshhold] = np.nan
 
     #print data[data['irrig_fraction'] != 0.].head()
@@ -241,18 +249,40 @@ if __name__ == '__main__':
     #print data[data['irrig_fraction'] != 0.].head()
 
     #data.rename(columns={'gpi': 'gpi_quarter'}, inplace=True)
-    data['gpi_quarter'] = data.index.values
 
-    dir = os.path.split(path)[0]
-    fname = os.path.split(path)[1]
-    region, mod, sat = fname.split('_')[:3]
+    """
+    df = pd.DataFrame(data = data.gpi_quarter)
+
+    amjjaso = df.copy()
+    amjjaso['AMJJASO'] = data.AMJJASO
+
+    seasons = df.copy()
+    seasons['MAM'] = data.MAM
+    seasons['JJA'] = data.JJA
+    seasons['SON'] = data.SON
+
+    months = df.copy()
+    months['April'] = data.Apr
+    months['May'] = data.May
+    months['June'] = data.Jun
+    months['July'] = data.Jul
+    months['Aug'] = data.Aug
+    months['September'] = data.Sep
+    months['October'] = data.Oct
+    """
+
+    #dir = os.path.split(path)[0]
+    #fname = os.path.split(path)[1]
+    #region, mod, sat = fname.split('_')[:3]
 
     spatial_plot_quarter_grid(data,
                               title='tag',
+                              tight=True,
                               region='USA',
-                              cbrange=(0,10),
-                              cmap='Greens',
+                              cbrange=(0,1),
+                              cmap='Greens')
                               #cblabel=r'$m^{3}/m^{3} per km^{2}$',
-                              cblabel=r'$days^{-1}$',
-                              path=dir,
-                              fname='{}_{}'.format(mod, sat))# + '_v4')
+                              #cblabel=r'$days^{-1}$',
+                              #path='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climat-plots',
+                              #fname='thresh_0.15')
+                              #fname='{}_{}'.format(mod, sat))# + '_v4')
