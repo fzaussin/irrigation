@@ -94,11 +94,9 @@ def align_with_mirad(binary_psds):
     :param psds_data:
     :return:
     """
-    mirad = pd.DataFrame.from_csv('/home/fzaussin/shares/home/mirad-25km/mirad25km_binary_irrig_fraction>=5.csv')
+    mirad = pd.DataFrame.from_csv('/home/fzaussin/shares/users/Irrigation/validation/mirad_downscaling/mirad-25km/BINARY_thresh>=5_mirad25kmv2_lat_lon_gpi_025degrees.csv')
     merged_data = pd.merge(binary_psds, mirad, how='left',
                            on='gpi_quarter')
-    merged_data.dropna(axis=0, inplace=True)
-    #merged_data.drop(['gpi_quarter'], axis=1, inplace=True)
     return merged_data
 
 
@@ -176,7 +174,7 @@ def cnfm_over_time(data, bbox=None, region=''):
     cnfm_over_time = cnfm_over_time.multiply(100)
 
     # create barplot with custom colors
-    title = "Classification accuracy ({})".format(region)
+    title = region
 
     ax = cnfm_over_time.plot.bar(
         color=['#018571', '#dfc27d', '#80cdc1', '#a6611a'],
@@ -208,16 +206,16 @@ if __name__== '__main__':
     bbox_arizona = (-114.8184,31.3322,-109.0452,37.0043)
     ###
     # make psds and mirad binary based on thresh
-    monthly_psds = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/ascat-merra-climat-based-months.csv'
+    monthly_psds = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climatology-based/ascat-merra-climat-based-months.csv'
 
-    thresh = 0.03
+    thresh = 0.04
     binary_psds = psds2binary(monthly_psds, thresh)
     merged_data = align_with_mirad(binary_psds)
 
     # plot binary maps
-    #spatial_plot_quarter_grid(merged_data, title='tag')
+    #spatial_plot_quarter_grid(merged_data, title='tag', cbrange=(0,1), cblabel='Binary irrigated area')
 
     # create conf-matrix bar plot
-    cnfm_over_time(merged_data, bbox=bbox_cali, region=str(thresh))
+    cnfm_over_time(merged_data, bbox=bbox_snake_river_valley, region='Snake River basin '+ str(bbox_snake_river_valley))
 
 
