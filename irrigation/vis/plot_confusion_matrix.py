@@ -191,14 +191,9 @@ if __name__== '__main__':
     #np.set_printoptions(precision=2)
     from irrigation.vis.spatialplot import spatial_plot_quarter_grid
     import matplotlib
-    matplotlib.style.use('ggplot')
+    matplotlib.style.use(['ggplot', 'seaborn-poster'])
 
-    psds_path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/ascat-merra-climat-based-months.csv'
-    binary_psds = psds2binary(psds_path, 0.03)
-    merged_data = align_with_mirad(binary_psds)
-
-    #spatial_plot_quarter_grid(merged_data, title='tag')
-
+    ###
     # subsets
     bbox_cali = (-124.48, 32.53, -114.13, 42.01) # state
     bbox_nebraska = (-104.0535,40.0,-95.3081,43.0013) # state
@@ -211,8 +206,18 @@ if __name__== '__main__':
     bbox_northdakota = (-104.05,45.94,-96.55,49.0)
     bbox_texas = (-106.65,25.84,-93.51,36.5)
     bbox_arizona = (-114.8184,31.3322,-109.0452,37.0043)
+    ###
+    # make psds and mirad binary based on thresh
+    monthly_psds = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/ascat-merra-climat-based-months.csv'
 
+    thresh = 0.03
+    binary_psds = psds2binary(monthly_psds, thresh)
+    merged_data = align_with_mirad(binary_psds)
 
-    cnfm_over_time(merged_data, bbox=bbox_georgia, region='Georgia')
+    # plot binary maps
+    #spatial_plot_quarter_grid(merged_data, title='tag')
+
+    # create conf-matrix bar plot
+    cnfm_over_time(merged_data, bbox=bbox_cali, region=str(thresh))
 
 
