@@ -186,7 +186,7 @@ class QDEGdata(object):
                 ts_ascat_reckless_rom.index = ts_ascat_reckless_rom.index.normalize()
             # append to data group
             ts_ascat_reckless_rom = ts_ascat_reckless_rom.resample('D').mean()
-            data_group['ascat_reckless_rom'] = ts_ascat_reckless_rom.divide(100)
+            data_group['ascatrecklessrom'] = ts_ascat_reckless_rom.divide(100)
 
         if 'amsr2' in satellites:
             # read amsr2 data
