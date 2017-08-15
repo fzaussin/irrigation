@@ -13,20 +13,20 @@ import pandas as pd
 ################################################################################
 # DEFINE PROCESS
 # output folder
-out_root = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/14-day-movav-window/seasonal'
+out_root = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based'
 
 # information on processing run and location info
-info = 'Monthly psds, NOT normalized' \
-       '8TUNG: processed with 35 days moving average window!!!'
-region = 'usa'
+info = 'Monthly psds, NOT normalized, processed with 35 days moving average window' \
+       'This data will be used for manuscript'
+region = 'monthly'
 
 # define 1 (!) model and multiple satellite datasets
 models = ['merra']
-satellites = ['ascatrecklessrom', 'amsr2', 'smapv4', 'smap']
+satellites = ['ascatrecklessrom', 'amsr2', 'smapv4am']
 
 # 'Q-NOV' for seasonal, 'M' for monthly results
-resampling = 'Q-NOV'
-window = 14
+resampling = 'M'
+window = 35
 
 # start- and end-dates of analysis period
 start = '2015-01-01'
@@ -53,7 +53,8 @@ counter = 0
 for row in gpis_lcmask.itertuples():
     counter = counter + 1
     gpi = row[1]
-    crop_fraction = row[2] # + row[3]
+    crop_fraction = row[2]
+
     print "Processing {model} with {satellites}"" \
     ""at gpi #{counter} of {total}".format(model=models,
                                            satellites=satellites,
