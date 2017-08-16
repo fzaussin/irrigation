@@ -10,8 +10,10 @@ Plotting routines for quarter degree data
 import os
 import numpy as np
 
+import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
+
 
 # use seaborn style
 import seaborn as sns
@@ -19,8 +21,9 @@ sns.set_style("white")
 sns.set(rc={'axes.facecolor':'#ffffff', 'figure.facecolor':'#ffffff'})
 
 
-def spatial_plot_quarter_grid(data, tags=None, region='USA', title='', tag_title=False,
-                              cblabel='', cbrange=None, cmap='BuGn', labelpad=-75,
+def spatial_plot_quarter_grid(data, tags=None, region='USA', title='',
+                              tag_title=False, cbar=True, cblabel='',
+                              cbrange=None, cmap='BuGn', labelpad=-75,
                               fontsize=20, figsize=(20, 10), tight=True,
                               path=None, fname=''):
     """"""
@@ -47,7 +50,7 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='', tag_title
         img_masked = np.ma.masked_invalid(img.reshape((180 * 4, 360 * 4)))
 
         # create figure
-        fig = plt.figure(num=None, figsize=figsize, dpi=90, facecolor='w', edgecolor='k')
+        fig = plt.figure(num=None, figsize=figsize, dpi=300, facecolor='w', edgecolor='k')
 
         if region == 'USA':
             # USA
@@ -86,17 +89,18 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='', tag_title
         cbar = fig.colorbar(im, ticks=[0, 10, 20, 30, 40, 50])
         cbar.ax.set_yticklabels(['0', '10', '20', '30', '40', '> 50'])  # vertically oriented colorbar
         """
-        cbar = plt.colorbar(im, pad=0.01)
+        if cbar:
+            cbar = plt.colorbar(im, pad=0.01)
 
-        # cbar label
-        if cblabel is None:
-            cbar.set_label(tag, fontsize=fontsize)
-        else:
-            cbar.set_label(cblabel, labelpad=20, y=0.5, fontsize=fontsize)
+            # cbar label
+            if cblabel is None:
+                cbar.set_label(tag, fontsize=fontsize)
+            else:
+                cbar.set_label(cblabel, labelpad=20, y=0.5, fontsize=fontsize)
 
-        # ticks
-        for t in cbar.ax.get_yticklabels():
-            t.set_fontsize(fontsize)
+            # ticks
+            for t in cbar.ax.get_yticklabels():
+                t.set_fontsize(fontsize)
 
         # title
         if title == 'tag':
@@ -226,63 +230,27 @@ def lcmask_map(csv_data, map_title=None, path_results=None, fname=None):
                               cbrange=(0, 1))
     pass
 
+
+
 if __name__ == '__main__':
     import pandas as pd
 
-    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/ascat-merra-climat-based.csv'
-    path = '/home/fzaussin/shares/home/mirad-25km/mirad25km_irrigation_lon_lat_gpi.csv'
+    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_merra_ascatrecklessrom_2015-01-01_2016-12-31.csv'
     data = pd.DataFrame.from_csv(path)
-    #data['gpi_quarter'] = data.index.values
+    data['gpi_quarter'] = data.index.values
+    print data.describe()
 
-    # mirad
-    data.irrigation[data.irrigation < 5] = 0
-    data.irrigation[data.irrigation >= 5] = 1
-    data.to_csv('/home/fzaussin/shares/home/mirad-25km/mirad25km_binary_irrig_fraction>=5.csv')
-    #data.irrigation[data.irrigation < 10] = np.nan
+    dir = os.path.split(path)[0]
+    fname = os.path.split(path)[1]
+    region, mod, sat = fname.split('_')[:3]
 
-    # apply threshhold
-    #threshhold = 0.15
-    #data[data < threshhold] = np.nan
-
-    #print data[data['irrig_fraction'] != 0.].head()
-    #data['irrig_fraction'][data['irrig_fraction'] != 0.] = 1.
-    #print data[data['irrig_fraction'] != 0.].head()
-
-    #data.rename(columns={'gpi': 'gpi_quarter'}, inplace=True)
-
-    """
-    df = pd.DataFrame(data = data.gpi_quarter)
-
-    amjjaso = df.copy()
-    amjjaso['AMJJASO'] = data.AMJJASO
-
-    seasons = df.copy()
-    seasons['MAM'] = data.MAM
-    seasons['JJA'] = data.JJA
-    seasons['SON'] = data.SON
-
-    months = df.copy()
-    months['April'] = data.Apr
-    months['May'] = data.May
-    months['June'] = data.Jun
-    months['July'] = data.Jul
-    months['Aug'] = data.Aug
-    months['September'] = data.Sep
-    months['October'] = data.Oct
-    """
-
-    #dir = os.path.split(path)[0]
-    #fname = os.path.split(path)[1]
-    #region, mod, sat = fname.split('_')[:3]
 
     spatial_plot_quarter_grid(data,
                               title='tag',
                               tight=True,
                               region='USA',
-                              cbrange=(0,1),
-                              cmap='Greens')
-                              #cblabel=r'$m^{3}/m^{3} per km^{2}$',
-                              #cblabel=r'$days^{-1}$',
-                              #path='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climat-plots',
-                              #fname='thresh_0.15')
-                              #fname='{}_{}'.format(mod, sat))# + '_v4')
+                              cbrange=(0,0.1),
+                              cmap='Greens',
+                              cblabel=r'$days^{-1}$',
+                              path='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_plots',
+                              fname='{}_{}'.format(mod, sat))# + '_v4')
