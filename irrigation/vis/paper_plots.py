@@ -137,7 +137,7 @@ def climat_slopes_subplot(gpi, location='', show=True):
 
     # rename cols for manuscript
     climat.rename(columns={'merra': 'MERRA',
-                           'ascat_reckless_rom': 'ASCAT'},
+                           'ascatrecklessrom': 'ASCAT'},
                   inplace=True)
 
     # calc psd
@@ -155,7 +155,7 @@ def climat_slopes_subplot(gpi, location='', show=True):
 
     # first row
     xticks = [1, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 366]
-    climat.plot(ax=ax1, title=title, xticks=xticks, ylim=(0,0.4))
+    climat.plot(ax=ax1, title=title, xticks=xticks, ylim=(0.15,0.4))
     ax1.legend(loc=3)
     ax1.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
     ax1.get_yaxis().set_label_coords(-0.1, 0.5)
@@ -200,7 +200,7 @@ def climat_slopes_corr_subplot(gpi, location, show=True):
 
     # rename cols for manuscript
     climat.rename(columns={'merra': 'MERRA',
-                           'ascat_reckless_rom': 'ASCAT'},
+                           'ascatrecklessrom': 'ASCAT'},
                   inplace=True)
 
     # calc rolling correlation
@@ -224,7 +224,7 @@ def climat_slopes_corr_subplot(gpi, location, show=True):
 
     # first row
     xticks = [1,30,60,90,120,150,180,210,240,270,300,330,366]
-    climat.plot(ax=ax1, title=title, ylim=(0,0.4), xticks=xticks)
+    climat.plot(ax=ax1, title=title, ylim=(0.15,0.4), xticks=xticks)
     ax1.legend(loc=3)
     ax1.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
     ax1.get_yaxis().set_label_coords(-0.07, 0.5)
@@ -275,10 +275,10 @@ if __name__=='__main__':
                   '730444': 'Partially irrigated',
                   '730445': 'Rainfed'}
     id = 'psd_comp_'
-    out_dir = '/home/fzaussin/TIMESERIES/methods/psd'
+    out_dir = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/'
 
 
-    for gpi, loc in loc_dict.iteritems():
+    for gpi, loc in irrig_dict.iteritems():
         print loc
         climat_slopes_subplot(int(gpi), loc, show=False)
 
