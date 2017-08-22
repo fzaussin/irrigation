@@ -19,18 +19,23 @@ def trmm_reader(lon, lat):
     return trmm_data['pcp']
 
 if __name__=='__main__':
-    lon_station, lat_station = (31.625, 30.875)
-    prec_ts_natres = trmm_reader(lon_station, lat_station)
+    lon, lat = (-89.375, 36.875)
+    prec_ts_natres = trmm_reader(lon, lat)
+
+
+    # climatology
+    daily_pcp = prec_ts_natres.resample('D').sum()
+    daily_climat = anomaly.calc_climatology(daily_pcp)
+
+    daily_climat.plot(title='daily climat')
 
     # calc anomaly
     climat = anomaly.calc_climatology(prec_ts_natres)
     anom= anomaly.calc_anomaly(prec_ts_natres, climatology=climat)
-
     monthly_anom = anom.resample('M').sum()
 
-    ax = monthly_anom.plot(title='TRMM monthly anomaly',
-                                                      ylim = (-20,30))
-    ax.set_ylabel(r"Precipitation ($mm$)")
+    #ax = monthly_anom.plot(title='TRMM monthly anomaly', ylim = (-20,30))
+    #ax.set_ylabel(r"Precipitation ($mm$)")
 
     #
     plt.show()
