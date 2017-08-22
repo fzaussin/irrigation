@@ -286,8 +286,6 @@ if __name__== '__main__':
     binary_map(path_climat, thresh=0.08, show=True)
 
 
-
-
     """
     # create conf-matrix bar plot for climats
     path_climat = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climatology-based/ascat-merra-climat-based-months.csv'
