@@ -135,7 +135,7 @@ def iter_conf_matrix(merged_data, show=False):
     else:
         return cnf_matrix_dict
 
-def cnfm_over_time_climats(data, bbox=None, region='', show=True):
+def cnfm_over_time_climats(merged_data, bbox=None, region='', show=True):
     """
     Creates bar plot of confusion matrix over time for a specific region or
     the whole input data frame.
@@ -155,6 +155,7 @@ def cnfm_over_time_climats(data, bbox=None, region='', show=True):
     data.drop(['lon', 'lat', 'gpi_quarter'], axis=1, inplace=True)
 
     cnf_dict = iter_conf_matrix(data)
+    print cnf_dict
 
     # stack confusion matrices over time in df
     df = pd.DataFrame.from_dict(cnf_dict)
@@ -186,7 +187,7 @@ def cnfm_over_time_climats(data, bbox=None, region='', show=True):
     if show:
         plt.show()
 
-def cnfm_over_time_movav(data, bbox=None, region='', show=True):
+def cnfm_over_time_movav(merged_data, bbox=None, region='', show=True):
     """
     Creates bar plot of confusion matrix over time for a specific region or
     the whole input data frame.
@@ -283,10 +284,10 @@ if __name__== '__main__':
     path_climat = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climatology-based/ascat-merra-climat-based-seasons.csv'
 
     # plot binary maps
-    binary_map(path_climat, thresh=0.08, show=True)
+    #binary_map(path_climat, thresh=0.08, show=True)
 
 
-    """
+
     # create conf-matrix bar plot for climats
     path_climat = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climatology-based/ascat-merra-climat-based-months.csv'
 
@@ -298,12 +299,13 @@ if __name__== '__main__':
     out_dir = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/conf-matrix-final/climats-classification/'
     for region, bbox in bboxes.iteritems():
         print region, bbox
-        cnfm_over_time_climats(merged_data, bbox, show=False,
+        cnfm_over_time_climats(merged_data, bbox, show=True,
                              region="{} {}".format(region, str(bbox)))
+        """
         plt.savefig(os.path.join(out_dir, region + '.png'),
                     dpi=300,
                     bbox_inches='tight')
-    """
+        """
 
     """
     # conf matrix over time for movav
