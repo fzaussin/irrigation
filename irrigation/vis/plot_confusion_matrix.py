@@ -106,6 +106,41 @@ def align_with_mirad(binary_psds):
 def iter_conf_matrix(merged_data, show=False):
     """
     Iterate over aggregated psds and create conf matrix with mirad-us.
+    Row-wise normalization yields 100% for TN and FP / 100% for FN and TP
+    :param merged_data:
+    :return:
+    """
+    mirad = merged_data['irrigation'].values
+    psds_agg = merged_data.drop('irrigation', axis=1)
+
+    cnf_matrix_dict = {}
+
+    for time_agg in psds_agg:
+        cnf_matrix = confusion_matrix(mirad, psds_agg[time_agg].values)
+
+        # normalize and append to dict
+        cm_norm = cnf_matrix.astype('float') / cnf_matrix.sum(axis=1)[:, np.newaxis]
+        #cm_norm = np.round(cm_norm, 2)
+        cnf_matrix_dict[time_agg] = cm_norm.flatten()
+
+        # plot
+        """
+        plt.figure()
+        plot_confusion_matrix(cnf_matrix,
+                              classes=['non-irrigated', 'irrigated'],
+                              normalize=True,
+                              title='Normalized confusion matrix for {}'.format(time_agg))
+        """
+    if show:
+        plt.show()
+    else:
+        return cnf_matrix_dict
+
+def iter_conf_matrix_total(merged_data, show=False):
+    """
+    Iterate over aggregated psds and create conf matrix with mirad-us.
+    Normalized by the total number of pixels to yield 100%
+
     :param merged_data:
     :return:
     """
@@ -175,14 +210,29 @@ def cnfm_over_time_climats(merged_data, bbox=None, region='', show=True):
     # transform to % between [0, 100]
     cnfm_over_time = cnfm_over_time.multiply(100)
 
-    # create barplot with custom colors
-    title = region
+    # save exact values to csv
+    outdir = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/conf-matrix-final/climat-classification'
+    cnfm_over_time.to_csv(outdir + region + '.csv')
 
-    ax = cnfm_over_time.plot.bar(
-        color=['#018571', '#dfc27d', '#80cdc1', '#a6611a'],
-        title=title, stacked=True, ylim=(0, 200), alpha=0.7)
-    ax.set_ylabel('Percent (%)')
-    plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
+    # create barplot with custom colors
+    plt.figure(figsize=(12, 8))
+    ax1 = plt.subplot2grid((2, 1), (0, 0))
+    ax2 = plt.subplot2grid((2, 1), (1, 0), sharex=ax1, sharey=ax1)
+
+
+    cnfm_over_time[['TN', 'FP']].plot.bar(ax=ax1, color=['#80cdc1', '#a6611a'],
+                                          stacked=True, ylim=(0, 100),
+                                          alpha=0.7, legend=False, title=region)
+    cnfm_over_time[['TP', 'FN']].plot.bar(ax=ax2, color=['#018571', '#dfc27d'],
+                                          stacked=True, ylim=(0, 100),
+                                          alpha=0.7, legend=False)
+
+    ax1.set_ylabel('Percent (%)')
+    ax2.set_ylabel('Percent (%)')
+
+    ax1.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
+    ax2.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
+
     plt.tight_layout()
     if show:
         plt.show()
@@ -222,14 +272,19 @@ def cnfm_over_time_movav(merged_data, bbox=None, region='', show=True):
     # transform to % between [0, 100]
     cnfm_over_time = cnfm_over_time.multiply(100)
 
+    # save exact values to csv
+    outdir = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/conf-matrix-final/movav-classification/amsr2/'
+    #cnfm_over_time.to_csv(outdir + 'monthly_' + region + '.csv')
+    cnfm_over_time.to_csv(outdir + 'seasonal_' + region + '.csv')
+
     # create barplot with custom colors
-    title = region
 
     # change index to only display year and month in plot
     cnfm_over_time.index = pd.to_datetime(cnfm_over_time.index)
     tstamps = cnfm_over_time.index
     format_tstamps = tstamps.map(lambda t: t.strftime('%Y-%m'))
 
+    """
     # create plot
     ax = cnfm_over_time.plot.bar(
         color=['#018571', '#dfc27d', '#80cdc1', '#a6611a'],
@@ -237,6 +292,29 @@ def cnfm_over_time_movav(merged_data, bbox=None, region='', show=True):
     ax.set_ylabel('Percent (%)')
     ax.set_xticklabels(format_tstamps)
     plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
+    """
+
+    # create barplot with custom colors
+    plt.figure(figsize=(12, 8))
+    ax1 = plt.subplot2grid((2, 1), (0, 0))
+    ax2 = plt.subplot2grid((2, 1), (1, 0), sharex=ax1, sharey=ax1)
+
+
+    cnfm_over_time[['TN', 'FP']].plot.bar(ax=ax1, color=['#80cdc1', '#a6611a'],
+                                          stacked=True, ylim=(0, 100),
+                                          alpha=0.7, legend=False, title=region)
+    cnfm_over_time[['TP', 'FN']].plot.bar(ax=ax2, color=['#018571', '#dfc27d'],
+                                          stacked=True, ylim=(0, 100),
+                                          alpha=0.7, legend=False)
+
+    ax1.set_ylabel('Percent (%)')
+    ax2.set_ylabel('Percent (%)')
+
+    ax1.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
+    ax2.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
+
+    ax2.set_xticklabels(format_tstamps)
+
     plt.tight_layout()
     if show:
         plt.show()
@@ -275,19 +353,13 @@ if __name__== '__main__':
     import matplotlib
     matplotlib.style.use(['ggplot', 'seaborn-poster'])
 
-    bboxes = {'USA': None,
+    bboxes = {'USA': (-125, 24, -65, 50),
          'California': (-124.48, 32.53, -114.13, 42.01),
          'Nebraska': (-104.05,40.00,-95.31,43.00),
          'Georgia': (-85.61,30.36,-80.75,35.00),
          'Mississippi': (-92.36, 31.21,-88.98,37.61)}
 
-    path_climat = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climatology-based/ascat-merra-climat-based-seasons.csv'
-
-    # plot binary maps
-    #binary_map(path_climat, thresh=0.08, show=True)
-
-
-
+    """
     # create conf-matrix bar plot for climats
     path_climat = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climatology-based/ascat-merra-climat-based-months.csv'
 
@@ -299,32 +371,48 @@ if __name__== '__main__':
     out_dir = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/conf-matrix-final/climats-classification/'
     for region, bbox in bboxes.iteritems():
         print region, bbox
-        cnfm_over_time_climats(merged_data, bbox, show=True,
+        cnfm_over_time_climats(merged_data, bbox, show=False,
                              region="{} {}".format(region, str(bbox)))
-        """
-        plt.savefig(os.path.join(out_dir, region + '.png'),
+
+        plt.savefig(os.path.join(out_dir, region + '.pdf'),
                     dpi=300,
-                    bbox_inches='tight')
-        """
+                    bbox_inches='tight',
+                    format='pdf')
+
 
     """
     # conf matrix over time for movav
 
     temp_res = 'monthly'
     # make psds and mirad binary based on thresh
-    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/monthly_merra_smapv4am_2015-01-01_2016-12-31.csv'
 
-    region, mod, sat = unwrap_path(path)
+    # SMAP
+    #path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/monthly_merra_smapv4am_2015-01-01_2016-12-31.csv'
+    #path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_merra_smapv4am_2015-01-01_2016-12-31.csv'
 
-    thresh = 0.04
-    binary_psds = psds2binary(path_climat, thresh)
+    # ASCAT
+    #path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/monthly_merra_ascatrecklessrom_2015-01-01_2016-12-31.csv'
+    #path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_merra_ascatrecklessrom_2015-01-01_2016-12-31.csv'
+
+    # AMSR-2
+    #path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/monthly_merra_amsr2_2015-01-01_2016-12-31.csv'
+    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_merra_amsr2_2015-01-01_2016-12-31.csv'
+
+    temp_res, mod, sat = unwrap_path(path)
+
+    # 0.04 for monthly, 0.08 for seasonal
+    thresh = 0.08
+    binary_psds = psds2binary(path, thresh)
     merged_data = align_with_mirad(binary_psds)
 
-    out_dir = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/conf-matrix-final/movav-classification'
+    out_dir = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/conf-matrix-final/movav-classification/amsr2'
     for region, bbox in bboxes.iteritems():
         print region, bbox
         cnfm_over_time_movav(merged_data, bbox, show=False,
                              region="{} {}".format(region,str(bbox)))
-        fname = "{}_{}_{}_{}.png".format(temp_res, mod,sat,region)
-        plt.savefig(os.path.join(out_dir, fname), dpi=300, bbox_inches='tight')
-    """
+        fname = "{}_{}_{}_{}".format(temp_res, mod,sat,region)
+        plt.savefig(os.path.join(out_dir, fname + '.pdf'),
+                    dpi=300,
+                    bbox_inches='tight',
+                    format='pdf')
+
