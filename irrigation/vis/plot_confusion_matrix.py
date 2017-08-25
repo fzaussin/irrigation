@@ -24,14 +24,16 @@ using :ref:`grid_search`.
 
 """
 
+# force floating point division
+from __future__ import division
+
 import itertools
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from sklearn import svm, datasets
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
+from sklearn import metrics
 
 from matplotlib.colors import ListedColormap
 from irrigation.vis.spatialplot import spatial_plot_quarter_grid
@@ -102,6 +104,30 @@ def align_with_mirad(binary_psds):
                            on='gpi_quarter')
     return merged_data
 
+def cnfm_scores(y_true, y_pred):
+    """Compute error matrix summary for binary classification."""
+    cnf_matrix = metrics.confusion_matrix(y_true, y_pred)
+    tn, fp, fn, tp = cnf_matrix.ravel()
+    print (tn, fp, fn, tp)
+
+    # build dictionary with scores
+    summary = {}
+    # Producers accuracy
+    summary['PA'] = tp / (tp + fn)
+    # Users accuracy
+    summary['UA'] = tp / (tp + fp)
+    # Error of Comission
+    summary['EoC'] = fp / (tp + fp)
+    # Error of Ommission
+    summary['EoO'] = fn / (tp + fn)
+    # Overall accuracy
+    summary['overall_accuracy'] = (tp + tn) / (tp + tn + fp + fn)
+    # kappa score
+    summary['kappa'] = metrics.cohen_kappa_score(y_true, y_pred)
+
+    return summary
+
+
 
 def iter_conf_matrix(merged_data, show=False):
     """
@@ -116,7 +142,18 @@ def iter_conf_matrix(merged_data, show=False):
     cnf_matrix_dict = {}
 
     for time_agg in psds_agg:
-        cnf_matrix = confusion_matrix(mirad, psds_agg[time_agg].values)
+        y_true = mirad
+        y_pred = psds_agg[time_agg].values
+        # confusion matrix
+        cnf_matrix = confusion_matrix(y_true, y_pred)
+
+        ### Some additional scores for interpretation
+        # also compute kappa score and print
+        kappa = metrics.cohen_kappa_score(y_true, y_pred)
+        # overall accuracy = (tp + tn) / (tp + tn + fp + fn)
+        overall_accuracy = metrics.accuracy_score(y_true, y_pred)
+        print '    {time}: kappa = {kappa}, overall accuracy sklearn = {acc}'.format(time=time_agg, kappa=kappa, acc=overall_accuracy)
+        ###
 
         # normalize and append to dict
         cm_norm = cnf_matrix.astype('float') / cnf_matrix.sum(axis=1)[:, np.newaxis]
@@ -136,39 +173,16 @@ def iter_conf_matrix(merged_data, show=False):
     else:
         return cnf_matrix_dict
 
-def iter_conf_matrix_total(merged_data, show=False):
-    """
-    Iterate over aggregated psds and create conf matrix with mirad-us.
-    Normalized by the total number of pixels to yield 100%
+def return_subset(merged_data, bbox):
+    min_lon, min_lat, max_lon, max_lat = bbox
+    data = merged_data.loc[(merged_data.lon <= max_lon) &
+                           (merged_data.lon >= min_lon) &
+                           (merged_data.lat <= max_lat) &
+                           (merged_data.lat >= min_lat)]
 
-    :param merged_data:
-    :return:
-    """
-    mirad = merged_data['irrigation'].values
-    psds_agg = merged_data.drop('irrigation', axis=1)
+    data.drop(['lon', 'lat', 'gpi_quarter'], axis=1, inplace=True)
+    return data
 
-    cnf_matrix_dict = {}
-
-    for time_agg in psds_agg:
-        cnf_matrix = confusion_matrix(mirad, psds_agg[time_agg].values)
-
-        # normalize and append to dict
-        cm_norm = cnf_matrix.astype('float') / cnf_matrix.sum(axis=1)[:, np.newaxis]
-        cm_norm = np.round(cm_norm, 2)
-        cnf_matrix_dict[time_agg] = cm_norm.flatten()
-
-        # plot
-        """
-        plt.figure()
-        plot_confusion_matrix(cnf_matrix,
-                              classes=['non-irrigated', 'irrigated'],
-                              normalize=True,
-                              title='Normalized confusion matrix for {}'.format(time_agg))
-        """
-    if show:
-        plt.show()
-    else:
-        return cnf_matrix_dict
 
 def cnfm_over_time_climats(merged_data, bbox=None, region='', show=True):
     """
@@ -359,7 +373,7 @@ if __name__== '__main__':
          'Georgia': (-85.61,30.36,-80.75,35.00),
          'Mississippi': (-92.36, 31.21,-88.98,37.61)}
 
-    """
+
     # create conf-matrix bar plot for climats
     path_climat = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climatology-based/ascat-merra-climat-based-months.csv'
 
@@ -373,12 +387,12 @@ if __name__== '__main__':
         print region, bbox
         cnfm_over_time_climats(merged_data, bbox, show=False,
                              region="{} {}".format(region, str(bbox)))
-
+        """
         plt.savefig(os.path.join(out_dir, region + '.pdf'),
                     dpi=300,
                     bbox_inches='tight',
                     format='pdf')
-
+        """
 
     """
     # conf matrix over time for movav
@@ -415,4 +429,4 @@ if __name__== '__main__':
                     dpi=300,
                     bbox_inches='tight',
                     format='pdf')
-
+    """
