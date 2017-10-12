@@ -209,10 +209,10 @@ if __name__== '__main__':
     # create conf-matrix bar plot for climats
     #path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_merra_smapv4am_2015-01-01_2016-12-31.csv'
     #path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_merra_ascatrecklessrom_2015-01-01_2016-12-31.csv'
-    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_merra_amsr2_2015-01-01_2016-12-31.csv'
+    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climatology-based/ascat-merra-climat-based-months.csv'
 
     # tresh
-    thresh = 0.08
+    thresh = 0.04
 
     # merge with mirad
     merged_data = return_merged(path, thresh)
@@ -228,6 +228,9 @@ if __name__== '__main__':
     for region, bbox in bboxes.iteritems():
         print region, bbox
         df_scores = bbox_scores(merged_data, bbox)
+        df_scores.to_csv('/home/fzaussin/Desktop/cnfm-scores/monthly-climats/' + region + '.csv')
+
+        """
         plot_scores_movav(df_scores, title=region)
 
         print df_scores
@@ -238,3 +241,4 @@ if __name__== '__main__':
 
     # df_scores.to_csv(
     #    '/home/fzaussin/Desktop/cnfm-scores/seasonal-movav/seasonal-scores-amsr2-' + region + '.csv')
+        """

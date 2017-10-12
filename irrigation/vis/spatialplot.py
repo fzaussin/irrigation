@@ -39,6 +39,7 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='',
 
     # iterate over cols/vars in df and create map
     for tag in tags:
+        print tag
         # initialize empty img
         img = np.empty(lons.size, dtype='float32')
         img.fill(None)
@@ -50,7 +51,7 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='',
         img_masked = np.ma.masked_invalid(img.reshape((180 * 4, 360 * 4)))
 
         # create figure
-        fig = plt.figure(num=None, figsize=figsize, dpi=300, facecolor='w', edgecolor='k')
+        fig = plt.figure(num=None, figsize=figsize, dpi=600, facecolor='w', edgecolor='k')
 
         if region == 'USA':
             # USA
@@ -123,6 +124,7 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='',
             #fpath = path + '/' + fname + str(tag) + '.png'
             fpath = os.path.join(path, fname + '_' + str(tag) + '.png')
             plt.savefig(fpath,
+                        format='png',
                         dpi=fig.dpi,
                         bbox_inches='tight',
                         facecolor=fig.get_facecolor())
@@ -235,22 +237,25 @@ def lcmask_map(csv_data, map_title=None, path_results=None, fname=None):
 if __name__ == '__main__':
     import pandas as pd
 
-    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_merra_ascatrecklessrom_2015-01-01_2016-12-31.csv'
+    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climatology-based/ascat-merra-climat-based-months.csv'
     data = pd.DataFrame.from_csv(path)
     data['gpi_quarter'] = data.index.values
-    print data.describe()
 
-    dir = os.path.split(path)[0]
-    fname = os.path.split(path)[1]
-    region, mod, sat = fname.split('_')[:3]
+    #dir = os.path.split(path)[0]
+    #fname = os.path.split(path)[1]
+    #region, mod, sat = fname.split('_')[:3]
 
+    outpath = '/home/fzaussin'
 
     spatial_plot_quarter_grid(data,
                               title='tag',
                               tight=True,
                               region='USA',
-                              cbrange=(0,0.1),
+                              cbrange=(0,0.05),
                               cmap='Greens',
                               cblabel=r'$days^{-1}$',
-                              path='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_plots',
-                              fname='{}_{}'.format(mod, sat))# + '_v4')
+                              fname='_monthly_climats',
+                              #path=outpath)
+                              #cblabel=r'$days^{-1}$')
+                              path='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_plots')
+                              #fname='{}_{}'.format(mod, sat))# + '_v4')

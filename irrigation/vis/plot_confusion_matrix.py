@@ -225,7 +225,7 @@ def cnfm_over_time_climats(merged_data, bbox=None, region='', show=True):
     cnfm_over_time = cnfm_over_time.multiply(100)
 
     # save exact values to csv
-    outdir = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/conf-matrix-final/climat-classification'
+    outdir = '/home/fzaussin/Desktop/cnfm-scores/monthly-climats/Mississippi.pdf'
     cnfm_over_time.to_csv(outdir + region + '.csv')
 
     # create barplot with custom colors
@@ -287,9 +287,9 @@ def cnfm_over_time_movav(merged_data, bbox=None, region='', show=True):
     cnfm_over_time = cnfm_over_time.multiply(100)
 
     # save exact values to csv
-    outdir = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/conf-matrix-final/movav-classification/amsr2/'
+    outdir = '/home/fzaussin/Desktop/cnfm-scores/monthly-climats/'
     #cnfm_over_time.to_csv(outdir + 'monthly_' + region + '.csv')
-    cnfm_over_time.to_csv(outdir + 'seasonal_' + region + '.csv')
+    cnfm_over_time.to_csv(outdir + 'climat_' + region + '.csv')
 
     # create barplot with custom colors
 
