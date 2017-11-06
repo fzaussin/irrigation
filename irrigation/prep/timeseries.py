@@ -31,25 +31,26 @@ def prepare(gpi, start_date, end_date, models, satellites, kind="clim", window=3
     # read data
     ts_input = data_object.read_gpi(gpi, start_date, end_date, models, satellites)
     ts_input = interp.add_nan(ts_input)
-    ts_gapfill = interp.iter_fill(ts_input, max_gap=5)
+    #ts_gapfill = interp.iter_fill(ts_input, max_gap=5)
 
     # either calc climatology, apply moving average filter, or do nothing
     if kind == 'clim':
-        ts_smooth = smooth.iter_climats(ts_gapfill)
+        ts_smooth = smooth.iter_climats(ts_input)
         plot_title = 'Climatology'
     elif kind == 'movav':
-        ts_smooth = smooth.iter_movav(ts_gapfill, window)
+        ts_smooth = smooth.iter_movav(ts_input, window)
         #ts_smooth = ts_gapfill
         plot_title = 'Moving average'
     elif kind == None:
         # return original data
-        ts_smooth = ts_gapfill
+        ts_smooth = ts_input
     else:
         raise NotImplementedError
         pass
 
     # drop rows with missing values
-    ts_smooth = ts_smooth.dropna()
+    # ts_smooth = ts_smooth.dropna()
+
     # scale satellite data to model data
     ts_scaled = scaling.scale(ts_smooth, 'mean_std', 0)
     return ts_scaled
@@ -60,6 +61,26 @@ if __name__ == "__main__":
 
     import matplotlib.pyplot as plt
     import matplotlib
-    matplotlib.style.use(['ggplot', 'seaborn-poster'])
+    matplotlib.style.use(['ggplot'])
 
-    pass
+    gpi = 716036
+
+    ts = prepare(gpi,
+                 '2007-01-01',
+                 '2016-12-31',
+                 models=['merra'],
+                 satellites=['ascatrecklessrom',
+                                   'smap',
+                                   'amsr2',
+                                   'amsre'
+                                   #'smapv4am',
+                                   #'smapv4pm'
+                                   ],
+                 kind='movav')
+
+    ax2 = ts.plot(title=str(gpi))
+    ax2.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
+    ax2.set_xlabel('Datetime')
+
+    print ts
+    plt.show()
