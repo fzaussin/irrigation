@@ -353,18 +353,10 @@ if __name__ == "__main__":
     from irrigation.prep import interp, smooth
     from pytesmo import scaling
 
-    gpi = 754912
+    gpi = 752009
 
     data = QDEGdata()
 
-    """
-    ts_models = data.read_models(gpi, '2007-01-01', '2016-12-31',
-                       models=['merra', 'eraland', 'gldas'])
-
-    ts_models.plot()
-    plt.show()
-
-    """
     ts = data.read_gpi(gpi, '2015-01-01', '2016-12-31',
                        models=['merra'],
                        satellites=['ascatrecklessrom',
@@ -376,13 +368,11 @@ if __name__ == "__main__":
                                    ])
     print ts
 
-    ts.dropna(inplace=True, axis=0)
     ts_scaled = scaling.scale(ts, 'mean_std', 0)
 
     ax = ts_scaled.plot(title=str(gpi))  # , ylim=(0,1))
     ax.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
     ax.set_xlabel('Datetime')
-
 
     ts_smooth = smooth.iter_movav(ts_scaled, 35)
     ax2 = ts_smooth.plot(title=str(gpi))  # , ylim=(0, 1))
