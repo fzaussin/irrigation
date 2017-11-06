@@ -74,7 +74,7 @@ if __name__=='__main__':
     print gpis
 
     # parallel processing
-    pool = mp.Pool(processes=8)
+    pool = mp.Pool(processes=7)
     try:
         # results is list of tuples where [0]=gpi, [1]=dict of data frames
         results = pool.map(process_in_parallel, gpis)

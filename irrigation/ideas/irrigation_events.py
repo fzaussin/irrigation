@@ -4,7 +4,7 @@ test summer job method again for different sat datasets
 
 import pandas as pd
 from irrigation.inout import importdata
-from inout.importdata import qdeg2lonlat
+from trans.transform import qdeg2lonlat
 from prep import interp
 from ideas import precipitation
 import matplotlib.pyplot as plt
@@ -18,7 +18,7 @@ def read_sm(gpi, start_date, end_date):
     # read sm data
     smdata = importdata.QDEGdata()
     sm = smdata.read_gpi(gpi, start, end,
-                         model='merra',
+                         models='merra',
                          satellites=['ascat',
                                      'ascat_ultimate_uhnari',
                                      'amsr2'])

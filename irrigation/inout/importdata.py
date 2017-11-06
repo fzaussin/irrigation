@@ -45,7 +45,7 @@ class QDEGdata(object):
         path_amsre = '/home/fzaussin/shares/users/Irrigation/Data/input/amsre'
         path_ascat = '/home/fzaussin/shares/users/Irrigation/Data/input/ascat-a'
         path_gldas = ('/home/fzaussin/shares/radar/Datapool_processed/'
-                      'GLDAS/GLDAS_NOAH025_3H.2.1/datasets')
+                      'GLDAS/GLDAS_NOAH025_3H.2.1/datasets/netcdf')
 
 
         # init data objects
@@ -154,7 +154,7 @@ class QDEGdata(object):
                                     0]['sm'][start_date:end_date]
             # append to data_group
             ts_amsre.index = ts_amsre.index.date
-            data_group['amsre'] = ts_amsre
+            data_group['amsre'] = ts_amsre.divide(100)
 
         if 'ascat' in satellites:
             ts_ascat = self.ascat.read(lon, lat)
@@ -259,6 +259,23 @@ class QDEGdata(object):
                 ts_smapv4_am.index = ts_smapv4_am.index.date
             data_group['smapv4am'] = ts_smapv4_am
 
+        if 'smapv4pm' in satellites:
+            # read smap v4 data
+            ts_smapv4_pm = self.smap_v4_pm.read(lon, lat)
+
+            # error handling
+            if ts_smapv4_pm is None:
+                print 'No smap data for gpi %0i' % gpi
+                ts_smap = pd.Series(
+                    index=pd.date_range(
+                        start=start_date,
+                        end=end_date))
+            else:
+                ts_smapv4_pm = ts_smapv4_pm['soil_moisture_pm'][start_date:end_date]
+            # append to data_group
+                ts_smapv4_pm.index = ts_smapv4_pm.index.date
+            data_group['smapv4pm'] = ts_smapv4_pm
+
         return data_group
 
     def read_models(self, gpi, start_date, end_date,
@@ -336,7 +353,8 @@ if __name__ == "__main__":
     from irrigation.prep import interp, smooth
     from pytesmo import scaling
 
-    gpi = 733196
+    gpi = 754912
+
     data = QDEGdata()
 
     """
@@ -347,22 +365,28 @@ if __name__ == "__main__":
     plt.show()
 
     """
-    ts = data.read_gpi(gpi, '2007-01-01', '2016-12-31',
+    ts = data.read_gpi(gpi, '2015-01-01', '2016-12-31',
                        models=['merra'],
                        satellites=['ascatrecklessrom',
+                                   'smap',
                                    'amsr2',
-                                   'smapv4'
+                                   #'amsre'
+                                   #'smapv4am',
+                                   #'smapv4pm'
                                    ])
     print ts
-    ts.dropna(inplace=True)
+
+    ts.dropna(inplace=True, axis=0)
     ts_scaled = scaling.scale(ts, 'mean_std', 0)
-    ts_smooth = smooth.iter_movav(ts_scaled, 35)
 
     ax = ts_scaled.plot(title=str(gpi))  # , ylim=(0,1))
     ax.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
     ax.set_xlabel('Datetime')
 
+
+    ts_smooth = smooth.iter_movav(ts_scaled, 35)
     ax2 = ts_smooth.plot(title=str(gpi))  # , ylim=(0, 1))
     ax2.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
     ax2.set_xlabel('Datetime')
+
     plt.show()

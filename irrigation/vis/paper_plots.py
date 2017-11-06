@@ -198,7 +198,7 @@ def climat_slopes_prec_subplot(gpi, location='', show=True):
                                 start_date='2007-01-01',
                                 end_date='2016-12-31',
                                 models=['merra'],
-                                satellites=['ascatrecklessrom'],
+                                satellites=['ascatrecklessrom', 'amsr2', 'smap'],
                                 kind='clim')
 
     # rename cols for manuscript
@@ -301,19 +301,19 @@ def climat_slopes_prec_subplot(gpi, location='', show=True):
 
     # SOIL MOISTURE
     xticks = [1, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 366]
-    climat.plot(ax=ax1, title=title, xticks=xticks, ylim=(0.15,0.4))
+    climat.plot(ax=ax1, title=title, xticks=xticks, ylim=(0,0.45)) #, ylim=(0.15,0.4)
     ax1.legend(loc=3)
     ax1.set_ylabel("Soil moisture \n" + r"($m^{3} m^{-3}$)")
     ax1.get_yaxis().set_label_coords(-0.1, 0.5)
 
     # PRECIPITATION
-    gpcc_climat.plot(ax=ax3, color='black', ylim=(2.75, 5.25)) #ylim=(2,6)) for 35 days
+    gpcc_climat.plot(ax=ax3, color='black', ylim=(0,5)) #, ylim=(2.75, 5.25)
     # r"Precipitation \n ($mm d^{-1}$)"
     ax3.set_ylabel("Rainfall \n" + r"($mm\/d^{-1}$)")
     ax3.get_yaxis().set_label_coords(-0.1, 0.5)
 
     # PSD
-    pos_slope_diffs.plot(ax=ax2, kind='line', legend=False, color='black', ylim=(0,0.007))
+    pos_slope_diffs.plot(ax=ax2, kind='line', legend=False, color='black', ylim=(0,0.01))
     # make line over fill of psd thinner
     ax2.lines[-1].set_linewidth(2)
     # sum for May-September (leap year doy calendar)
@@ -406,13 +406,13 @@ def climat_slopes_corr_subplot(gpi, location, show=True):
 
     # first row
     xticks = [1,30,60,90,120,150,180,210,240,270,300,330,366]
-    climat.plot(ax=ax1, title=title, ylim=(0.15,0.4), xticks=xticks)
+    climat.plot(ax=ax1, title=title, xticks=xticks) # ylim=(0.15,0.4),
     ax1.legend(loc=3)
     ax1.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
     ax1.get_yaxis().set_label_coords(-0.07, 0.5)
 
     # second row
-    pos_slope_diffs.plot(ax=ax2, kind='line', legend=False, color='black', ylim=(0, 0.01))
+    pos_slope_diffs.plot(ax=ax2, kind='line', legend=False, color='black') # , ylim=(0, 0.01)
     ax2.lines.set_linewidth(1)
     # sum for May-September (leap year doy calendar)
     yearly_psds = pos_slope_diffs[122:274].sum()['ASCAT']
@@ -445,6 +445,10 @@ def climat_slopes_corr_subplot(gpi, location, show=True):
 
 
 if __name__=='__main__':
+    climat_slopes_prec_subplot(753440)
+    plt.show()
+
+    """
     # showcase gpis
     loc_dict = {'726000': 'California Central Valley',
                 '723239': 'Mississippi Delta',
@@ -464,8 +468,8 @@ if __name__=='__main__':
     for gpi, loc in irrig_dict.iteritems():
         print loc
         climat_slopes_prec_subplot(int(gpi), loc, show=True)
-        """
+
         plt.savefig(os.path.join(out_dir, id + loc + '.pdf'),
                     format='pdf',
                     dpi=300)
-        """
+    """

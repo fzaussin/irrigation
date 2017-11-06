@@ -51,7 +51,7 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='',
         img_masked = np.ma.masked_invalid(img.reshape((180 * 4, 360 * 4)))
 
         # create figure
-        fig = plt.figure(num=None, figsize=figsize, dpi=600, facecolor='w', edgecolor='k')
+        fig = plt.figure(num=None, figsize=figsize, dpi=90, facecolor='w', edgecolor='k')
 
         if region == 'USA':
             # USA
@@ -237,7 +237,7 @@ def lcmask_map(csv_data, map_title=None, path_results=None, fname=None):
 if __name__ == '__main__':
     import pandas as pd
 
-    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climatology-based/ascat-merra-climat-based-months.csv'
+    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/yearly-range/usa_ascatrecklessrom.csv'
     data = pd.DataFrame.from_csv(path)
     data['gpi_quarter'] = data.index.values
 
@@ -245,17 +245,17 @@ if __name__ == '__main__':
     #fname = os.path.split(path)[1]
     #region, mod, sat = fname.split('_')[:3]
 
-    outpath = '/home/fzaussin'
+    #outpath = '/home/fzaussin'
 
     spatial_plot_quarter_grid(data,
                               title='tag',
                               tight=True,
                               region='USA',
-                              cbrange=(0,0.05),
-                              cmap='Greens',
-                              cblabel=r'$days^{-1}$',
-                              fname='_monthly_climats',
+                              cbrange=(0,0.7),
+                              cmap='PuBu_r')
+                              #cblabel=r'$days^{-1}$',
+                              #fname='_monthly_climats',
                               #path=outpath)
                               #cblabel=r'$days^{-1}$')
-                              path='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_plots')
+                              #path='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_plots')
                               #fname='{}_{}'.format(mod, sat))# + '_v4')
