@@ -120,15 +120,21 @@ if __name__=='__main__':
     from irrigation.prep import timeseries, interp
     from irrigation.trans.transform import qdeg2lonlat
 
-    gpi = 789361
+    gpi = 753477
     location = ''
 
     climat = timeseries.prepare(gpi=gpi,
                             start_date='2007-01-01',
                             end_date='2016-12-31',
                             models=['merra'],
-                            satellites=['ascatrecklessrom'],
-                            kind='clim')
+                            satellites=['ascatrecklessrom',
+                                        'amsr2',
+                                        'smap',
+                                        'amsre'],
+                            kind='movav')
     # calc psd
     slopes_climat = diffquot_slope_climat(climat)
     pos_slope_diffs = psd(slopes_climat)
+
+    pos_slope_diffs.resample('M').sum().plot(title=str(gpi))
+    plt.show()
