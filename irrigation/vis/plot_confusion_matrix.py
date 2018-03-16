@@ -373,7 +373,12 @@ if __name__== '__main__':
          'Georgia': (-85.61,30.36,-80.75,35.00),
          'Mississippi': (-92.36, 31.21,-88.98,37.61)}
 
+    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/FIXED/movav-based/smapv4_mean/seasonal_merra_smapv4_2015-01-01_2016-12-31.csv'
 
+    binary_map(path, show=False, thresh=0.08)
+    #plt.show()
+
+    """
     # create conf-matrix bar plot for climats
     path_climat = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climatology-based/ascat-merra-climat-based-months.csv'
 
@@ -387,14 +392,14 @@ if __name__== '__main__':
         print region, bbox
         cnfm_over_time_climats(merged_data, bbox, show=False,
                              region="{} {}".format(region, str(bbox)))
-        """
+
         plt.savefig(os.path.join(out_dir, region + '.pdf'),
                     dpi=300,
                     bbox_inches='tight',
                     format='pdf')
-        """
 
-    """
+
+
     # conf matrix over time for movav
 
     temp_res = 'monthly'

@@ -20,7 +20,7 @@ def read_sm(gpi, start_date, end_date):
     sm = smdata.read_gpi(gpi, start, end,
                          models='merra',
                          satellites=['ascat',
-                                     'ascat_ultimate_uhnari',
+                                     'ascatrecklessrom',
                                      'amsr2'])
     # fill small gaps
     sm = sm[start_date:end_date]
@@ -29,9 +29,9 @@ def read_sm(gpi, start_date, end_date):
 
 def read_prec(gpi, start_date, end_date):
     """"""
-    lon, lat = qdeg2lonlat(gpi)
+    #lon, lat = qdeg2lonlat(gpi)
     # read trmm data
-    prec = precipitation.trmm_reader(lon=lon, lat=lat)
+    prec = precipitation.trmm_reader(gpi)
     prec = prec[start_date:end_date]
     return prec.resample('D').sum()
 
@@ -40,7 +40,7 @@ def read_prec(gpi, start_date, end_date):
 if __name__=='__main__':
 
     # info
-    gpi = 762715
+    gpi = 726000
     start = '2013-01-01'
     end = '2016-12-31'
 
@@ -64,7 +64,7 @@ if __name__=='__main__':
     print irrig_events
 
     irrig_events['ascat'].plot(x='x', y='y', style='.', color='blue')
-    irrig_events['ascat_ultimate_uhnari'].plot(x='x', y='y', style='.', color='purple')
+    irrig_events['ascatrecklessrom'].plot(x='x', y='y', style='.', color='purple')
     irrig_events['amsr2'].plot(x='x', y='y', style='.', color='grey')
     irrig_events['merra'].plot(x='x', y='y', style='.', color='red')
 

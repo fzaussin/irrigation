@@ -197,7 +197,7 @@ def plot_scores_movav(df_scores, title=''):
 if __name__== '__main__':
     import os
     import matplotlib
-    matplotlib.style.use(['ggplot', 'seaborn-poster'])
+    matplotlib.style.use(['ggplot'])
 
     bboxes = {'USA': (-125, 24, -65, 50),
          'California': (-124.48, 32.53, -114.13, 42.01),
@@ -209,10 +209,10 @@ if __name__== '__main__':
     # create conf-matrix bar plot for climats
     #path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_merra_smapv4am_2015-01-01_2016-12-31.csv'
     #path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_merra_ascatrecklessrom_2015-01-01_2016-12-31.csv'
-    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climatology-based/ascat-merra-climat-based-months.csv'
+    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/FIXED/movav-based/ascatrecklessrom/seasonal_merra_ascatrecklessrom_2015-01-01_2016-12-31.csv'
 
     # tresh
-    thresh = 0.04
+    thresh = 0.08
 
     # merge with mirad
     merged_data = return_merged(path, thresh)
@@ -223,22 +223,23 @@ if __name__== '__main__':
     #plt.show()
 
 
-    out_dir = '/home/fzaussin/Desktop/cnfm-scores/seasonal-movav/'
+    out_dir = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/FIXED/movav-based/smapv4_mean'
     # bbox subset
     for region, bbox in bboxes.iteritems():
         print region, bbox
         df_scores = bbox_scores(merged_data, bbox)
-        df_scores.to_csv('/home/fzaussin/Desktop/cnfm-scores/monthly-climats/' + region + '.csv')
+        df_scores.to_csv('/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/FIXED/movav-based/smapv4_mean/' + region + '.csv')
 
-        """
         plot_scores_movav(df_scores, title=region)
 
-        print df_scores
-        outpath = out_dir + 'seasonal-amsr2-' + region + '.pdf'
-        plt.savefig(outpath,
-                    format='pdf')
+    plt.show()
+    """
+    print df_scores
+    outpath = out_dir + 'seasonal-amsr2-' + region + '.pdf'
+    plt.savefig(outpath,
+                format='pdf')
 
 
     # df_scores.to_csv(
     #    '/home/fzaussin/Desktop/cnfm-scores/seasonal-movav/seasonal-scores-amsr2-' + region + '.csv')
-        """
+    """

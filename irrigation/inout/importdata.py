@@ -227,7 +227,8 @@ class QDEGdata(object):
             ts_smapv4_pm = self.smap_v4_pm.read(lon, lat)
             ts_smapv4 = pd.concat([ts_smapv4_am['soil_moisture'],
                                    ts_smapv4_pm['soil_moisture_pm']], axis=1)
-            ts_smapv4['combined'] = ts_smapv4['soil_moisture'].fillna(ts_smapv4['soil_moisture_pm'])
+            ts_smapv4 = ts_smapv4['soil_moisture'].fillna(ts_smapv4['soil_moisture_pm'])
+            #ts_smapv4 = ts_smapv4.mean(axis=1)
 
             # error handling
             if ts_smapv4 is None:
@@ -237,7 +238,7 @@ class QDEGdata(object):
                         start=start_date,
                         end=end_date))
             else:
-                ts_smapv4 = ts_smapv4['combined'][start_date:end_date]
+                ts_smapv4 = ts_smapv4[start_date:end_date]
             # append to data_group
                 ts_smapv4.index = ts_smapv4.index.date
             data_group['smapv4'] = ts_smapv4
@@ -348,35 +349,54 @@ class QDEGdata(object):
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib
-    matplotlib.style.use('ggplot')
+    #matplotlib.style.use('ggplot')
+    import seaborn as sns
+    sns.set_style('ticks')
+    #sns.set_palette('dark')
 
     from irrigation.prep import interp, smooth
-    from pytesmo import scaling
+    from pytesmo import scaling, time_series
+    from pytesmo.time_series.filtering import moving_average
+    from irrigation.trans import transform
+    from inout.cpc_prec import read_cpc
 
-    gpi = 752009
+    gpi = 734717
 
     data = QDEGdata()
 
-    ts = data.read_gpi(gpi, '2015-01-01', '2016-12-31',
+    ts = data.read_gpi(gpi, '2013-01-01', '2016-12-31',
                        models=['merra'],
-                       satellites=['ascatrecklessrom',
-                                   'smap',
+                       satellites=[#'ascatrecklessrom',
+                                   #'smap',
                                    'amsr2',
-                                   #'amsre'
+                                   #'amsre',
                                    #'smapv4am',
-                                   #'smapv4pm'
+                                   #'smapv4pm',
+                                   'smapv4'
                                    ])
-    print ts
+    #ts = interp.iter_fill(ts, max_gap=5)
+    ts.plot()
+    #ts.dropna(inplace=True)
+    ts_scaled = scaling.scale(ts, 'mean_std_nan', 0)
 
-    ts_scaled = scaling.scale(ts, 'mean_std', 0)
+    # read prec data
+    ts_prec = read_cpc(gpi)
+    prec_plot = ts_prec.resample('W').sum()
+    yearly_prec = ts_prec.resample('A').sum()
+    print yearly_prec
 
-    ax = ts_scaled.plot(title=str(gpi))  # , ylim=(0,1))
-    ax.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
-    ax.set_xlabel('Datetime')
+    # unsmoothed
+    ax = ts_scaled.plot(title=str(gpi), style=['-', '-o', '-o', '-o'], ms=3)  # , ylim=(0,1))
+    ax.set_ylabel(r"Soil moisture ($m^{3}m^{-3}$)")
 
+    # smoothed
     ts_smooth = smooth.iter_movav(ts_scaled, 35)
+
     ax2 = ts_smooth.plot(title=str(gpi))  # , ylim=(0, 1))
     ax2.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
-    ax2.set_xlabel('Datetime')
+
+    ax2 = prec_plot.plot.area(secondary_y=True)
+    ax2.set_ylabel(r"Precipitation ($mm/day$)")
+
 
     plt.show()

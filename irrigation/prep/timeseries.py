@@ -30,8 +30,8 @@ def prepare(gpi, start_date, end_date, models, satellites, kind="clim", window=3
     """
     # read data
     ts_input = data_object.read_gpi(gpi, start_date, end_date, models, satellites)
-    ts_input = interp.add_nan(ts_input)
-    #ts_gapfill = interp.iter_fill(ts_input, max_gap=5)
+    #ts_input = interp.add_nan(ts_input)
+    ts_input = interp.iter_fill(ts_input, max_gap=5)
 
     # either calc climatology, apply moving average filter, or do nothing
     if kind == 'clim':
@@ -49,11 +49,12 @@ def prepare(gpi, start_date, end_date, models, satellites, kind="clim", window=3
         pass
 
     # drop rows with missing values
-    # ts_smooth = ts_smooth.dropna()
+    #ts_smooth = ts_smooth.dropna()
 
     # scale satellite data to model data
-    ts_scaled = scaling.scale(ts_smooth, 'mean_std', 0)
-    return ts_scaled
+    ts_scaled = scaling.scale(ts_smooth, 'mean_std_nan', 0)
+    # drop nan rows for slope funcs
+    return ts_scaled #.dropna()
 
 
 if __name__ == "__main__":
@@ -61,26 +62,28 @@ if __name__ == "__main__":
 
     import matplotlib.pyplot as plt
     import matplotlib
-    matplotlib.style.use(['ggplot'])
+    #matplotlib.style.use(['ggplot'])
 
-    gpi = 716036
+    gpi = 721795
 
     ts = prepare(gpi,
-                 '2007-01-01',
+                 '2012-01-01',
                  '2016-12-31',
                  models=['merra'],
                  satellites=['ascatrecklessrom',
-                                   'smap',
+                             #'ascat',
+                                   #'smap',
                                    'amsr2',
-                                   'amsre'
+                                   #'amsre',
+                                   'smapv4'
                                    #'smapv4am',
                                    #'smapv4pm'
                                    ],
-                 kind='movav')
+                 kind='clim',
+                 window=35)
 
     ax2 = ts.plot(title=str(gpi))
-    ax2.set_ylabel(r"Soil moisture ($m^{3}/m^{3}$)")
-    ax2.set_xlabel('Datetime')
-
+    ax2.set_ylabel(r"Soil moisture ($m^{3}m^{-3}$)")
+    #ax2.set_xlabel('Datetime')
     print ts
     plt.show()

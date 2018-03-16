@@ -25,7 +25,8 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='',
                               tag_title=False, cbar=True, cblabel='',
                               cbrange=None, cmap='BuGn', labelpad=-75,
                               fontsize=20, figsize=(20, 10), tight=True,
-                              path=None, fname=''):
+                              path=None, fname='',
+                              type=None):
     """"""
 
     # generate 0.25° meshgrid
@@ -63,7 +64,8 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='',
             m.drawcoastlines(color='#191919', zorder=2)
             m.drawcountries(color='#333333', zorder=2)
             m.drawstates(color='#666666', zorder=2)
-            m.fillcontinents(color='#f2f2f2', zorder=0)
+            #m.fillcontinents(color='#f2f2f2', zorder=0)
+            m.fillcontinents(color='#d9d9d9', zorder=0)
         elif region == 'egypt':
             m = Basemap(llcrnrlon=27.,
                         llcrnrlat=26,
@@ -79,6 +81,43 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='',
             m.drawcoastlines()
             m.drawcountries()
 
+        # give nan values special color
+        #cmap = plt.get_cmap(cmap)
+        #cmap.set_bad(color='w', alpha=1.)
+        """
+        # temporarily plot markers
+        markersize = 12
+        # cali irrig
+        lon, lat = -121.87 + 0.125, 39.38 + 0.125
+        x, y = m(lon, lat)
+        m.plot(x, y, 'ro', markersize=markersize)
+
+        # cali non-irrig
+        lon, lat = -122.375 + 0.125, 40.375 + 0.125
+        x, y = m(lon, lat)
+        m.plot(x, y, 'r^', markersize=markersize)
+
+        # idaho irrig
+        lon, lat = -114.625 + 0.125, 42.625 + 0.125
+        x, y = m(lon, lat)
+        m.plot(x, y, 'ro', markersize=markersize)
+
+        # idaho non-irrig
+        lon, lat = -115.375 + 0.125, 42.625 + 0.125
+        x, y = m(lon, lat)
+        m.plot(x, y, 'r^', markersize=markersize)
+
+        # mississ irrig
+        lon, lat = -90.125 + 0.125, 35.625 + 0.125
+        x, y = m(lon, lat)
+        m.plot(x, y, 'ro', markersize=markersize)
+
+        # mississ non-irrig
+        lon, lat = -89.375 + 0.125, 35.375 + 0.125
+        x, y = m(lon, lat)
+        m.plot(x, y, 'r^', markersize=markersize)
+        """
+        # create img
         im = m.pcolormesh(lons, lats, img_masked, cmap=cmap, latlon=True, zorder=1)
 
         # auto scaling
@@ -91,7 +130,7 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='',
         cbar.ax.set_yticklabels(['0', '10', '20', '30', '40', '> 50'])  # vertically oriented colorbar
         """
         if cbar:
-            cbar = plt.colorbar(im, pad=0.01)
+            cbar = plt.colorbar(im, pad=0.01)#, extend='max')
 
             # cbar label
             if cblabel is None:
@@ -104,8 +143,21 @@ def spatial_plot_quarter_grid(data, tags=None, region='USA', title='',
                 t.set_fontsize(fontsize)
 
         # title
-        if title == 'tag':
+        if title == 'tag' and type is None:
             tmp_title = tag
+        elif title == 'tag' and type == 'seasonal':
+            year = tag[:4]
+            month = tag[5:7]
+
+            month2season = {'05': 'MAM',
+                            '08': 'JJA',
+                            '11': 'SON',
+                            '02': 'DJF',
+                            # for gpi_quarter
+                            'ua': 'grid points'}
+            season = month2season.get(month)
+            tmp_title = year + ' ' + season
+
         else:
             tmp_title = title
         plt.title(tmp_title, fontsize=fontsize)
@@ -158,7 +210,7 @@ def spatial_plot(data, lons, lats, cbrange=(0,100)):
     plt.show()
 
 
-def map_maker(csv_data, map_title=None, path_results=None, fname=None):
+def map_maker(csv_data, map_title='', path_results=None, fname=''):
     """
     Wrapper around spatial_plot_quarter_grid for Irrigation_Analysis plots
 
@@ -170,7 +222,8 @@ def map_maker(csv_data, map_title=None, path_results=None, fname=None):
 
     # single months
     spatial_plot_quarter_grid(data=csv_data,
-                              tags=['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+                              cmap='Blues',
+                              tags=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                               title=map_title,
                               path=path_results,
                               fname=fname,
@@ -178,12 +231,13 @@ def map_maker(csv_data, map_title=None, path_results=None, fname=None):
                               tag_title=True,
                               tight=True,
                               region='USA',
-                              cblabel=r'$days^{-1}$',
-                              cbrange=(0, 30))
+                              cblabel=r'$SM^{+}_{Irr}$ ($m^{3}m^{-3}$)',
+                              cbrange=(0, 0.05))
 
     # climatologies
     spatial_plot_quarter_grid(data=csv_data,
-                                 tags=['JJA', 'SON'],
+                              cmap='Blues',
+                                 tags=['MAM', 'JJA', 'SON'],
                                  title=map_title,
                                  path=path_results,
                                  fname=fname,
@@ -191,11 +245,12 @@ def map_maker(csv_data, map_title=None, path_results=None, fname=None):
                                  tag_title=True,
                                  tight=True,
                                  region='USA',
-                                 cblabel=r'$days^{-1}$',
-                                 cbrange=(0, 50))
+                                 cblabel=r'$SM^{+}_{Irr}$ ($m^{3}m^{-3}$)',
+                                 cbrange=(0, 0.15))
 
     # AMJJASO (April - October)
     spatial_plot_quarter_grid(data=csv_data,
+                              cmap='Blues',
                                  tags=['AMJJASO'],
                                  title=map_title,
                                  path=path_results,
@@ -204,8 +259,8 @@ def map_maker(csv_data, map_title=None, path_results=None, fname=None):
                                  tag_title=True,
                                  tight=True,
                                  region='USA',
-                                 cblabel=r'$days^{-1}$',
-                                 cbrange=(0, 80))
+                                 cblabel=r'$SM^{+}_{Irr}$ ($m^{3}m^{-3}$)',
+                                 cbrange=(0, 0.20))
     pass
 
 
@@ -237,25 +292,33 @@ def lcmask_map(csv_data, map_title=None, path_results=None, fname=None):
 if __name__ == '__main__':
     import pandas as pd
 
-    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/yearly-range/usa_ascatrecklessrom.csv'
+    path = '/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/FIXED/NEW-METRIC/USA/climats/smapv4-merra-climat-based.csv'
     data = pd.DataFrame.from_csv(path)
     data['gpi_quarter'] = data.index.values
 
-    #dir = os.path.split(path)[0]
-    #fname = os.path.split(path)[1]
-    #region, mod, sat = fname.split('_')[:3]
+    # drop empty columns
+    data = data.dropna(axis=1, how='all')
 
+    """
+    map_maker(data,
+              path_results='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/climatology-based/amsr2/new_cbar'
+              )
+    
+
+    dir = os.path.split(path)[0]
+    fname = os.path.split(path)[1]
+    region, mod, sat = fname.split('_')[:3]
+    print region, mod, sat
     #outpath = '/home/fzaussin'
+    """
 
     spatial_plot_quarter_grid(data,
                               title='tag',
                               tight=True,
                               region='USA',
-                              cbrange=(0,0.7),
-                              cmap='PuBu_r')
-                              #cblabel=r'$days^{-1}$',
-                              #fname='_monthly_climats',
-                              #path=outpath)
-                              #cblabel=r'$days^{-1}$')
-                              #path='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/movav-based/seasonal_plots')
+                              cbrange=(0,0.05),
+                              cmap='Blues',
+                              cblabel=r'$SM^{+}_{Irr}$ ($m^{3}m^{-3}$)',
+                              #type='seasonal'
+                              path='/home/fzaussin/shares/users/Irrigation/Data/output/new-results/PAPER/FINAL/FIXED/NEW-METRIC/USA/climats/smapv4')
                               #fname='{}_{}'.format(mod, sat))# + '_v4')

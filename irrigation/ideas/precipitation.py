@@ -20,8 +20,10 @@ def trmm_reader(gpi):
     trmm_data.loc[trmm_data['pcp'] == -9999.900391] = np.nan
     return trmm_data['pcp']
 
+
 if __name__=='__main__':
-    gpi = 696364
+
+    gpi = 789361
     prec_ts_natres = trmm_reader(gpi)
 
 
